@@ -1,0 +1,39 @@
+use num = u8 | u16 | u32 | u64 | i8 | i16 | i64 | f32 | f64;
+
+fn sum(a: num, b: num): num {
+    // ...
+}
+
+async fn render_ui(data: Xml) {
+    // ...
+}
+
+const x = 7 // defaults to i32
+let x1: u64 = 7;
+
+let res = x + x1; // error: explicit casting or type information required
+let res = (x as u64) + x1; // ok
+
+let y: u64? = null; // nullable
+res = x1 + y; // error: `y` can be null
+
+y = y.extract_or_default();
+
+let a = sum(5, 7);
+
+x: Xml = <>
+      <text>{ "hello world" }</text>
+</>;
+
+t: table = {
+    name: "example",
+    age: 32,
+};
+
+render_ui(
+    <Window width={3} height={4}>
+        <h1>hello world!</h1>
+    </Window>
+);
+
+$"hello {name:>10}"
