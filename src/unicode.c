@@ -1,15 +1,19 @@
-#include "wave/_debug.h"
+#include <complex.h>
+#include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
+#include <string.h>
 #include <wave/unicode.h>
 
-Wave_Unicode_CharUtf8 Wave_Unicode_CharUtf8_get_at(const uint32_t value) {
-    if (value > 1114111)
-        return 0;
-    if (value < 128)
-        return value;// << (8 * 3);
+struct Wave_Unicode_CharUtf8 Wave_Unicode_CharUtf8_get_at(const uint32_t value) {
+    struct Wave_Unicode_CharUtf8 ch = {{0}};
 
-    Wave_Unicode_CharUtf8 ch = 0;
+    if (value > 1114111)
+        return ch;
+    if (value < 128) {
+        ch.bytes[0] = value & 127;
+        return ch;
+    }
 
     uint8_t bytes[4];
     //*(uint32_t *)bytes = value;             // mk: this is ub bruh
@@ -21,64 +25,63 @@ Wave_Unicode_CharUtf8 Wave_Unicode_CharUtf8_get_at(const uint32_t value) {
     
     if (value < 2048) {
         length = 2;
-        ch = 192u << (8 * (length - 1));
+        ch.bytes[0] = 192u;
         wildcard = 7;
     } else if (value < 65536) {
         length = 3;
-        ch = 224u << (8 * (length - 1));
+        ch.bytes[0] = 224u;
         wildcard = 15;
     } else {
         length = 4;
-        ch = 240u << (8 * (length - 1));
+        ch.bytes[0] = 240u;
         wildcard = 31;
     }
 
     for (uint32_t i = 0; i < length - 1; i++) {
-        ch |= ((128u | ((value >> (6 * i)) & 63u)) << (8 * i));
+        ch.bytes[length - i - 1] = 128u | ((value >> (6 * i)) & 63u);
     }
 
-    ch |= ((value >> (6 + (length - 1) * 5)) & wildcard) << (6 + (length - 1) * 5);
+    ch.bytes[0] |= (uint8_t)(value >> (6 * (length - 1))) & wildcard;
 
     return ch;
 }
 
-uint8_t Wave_Unicode_CharUtf8_get_length(const Wave_Unicode_CharUtf8 ch) {
-    const uint8_t first = *(uint8_t *)&ch;
+uint8_t Wave_Unicode_CharUtf8_get_length(const struct Wave_Unicode_CharUtf8 ch) {
+    return Wave_Unicode_CharUtf8_get_length_from_byte(ch.bytes[0]);
+}
 
+uint8_t Wave_Unicode_CharUtf8_get_length_from_byte(const uint8_t byte) {
     // mk: ready, cheap, simple and already unrolled lol
-    if (!(first & (1u << 7)))
+    if (!(byte & (1u << 7)))
         return 1;
     
-    if (!(first & (1u << 6)))
+    if (!(byte & (1u << 6)))
         return 0;
 
-    if (!(first & (1u << 5)))
+    if (!(byte & (1u << 5)))
         return 2;
 
-    if (!(first & (1u << 4)))
+    if (!(byte & (1u << 4)))
         return 3;
 
-    if (!(first & (1u << 3)))
+    if (!(byte & (1u << 3)))
         return 4;
 
     return 0;
 }
 
-uint32_t Wave_Unicode_CharUtf8_get_index(const Wave_Unicode_CharUtf8 ch) {
+uint32_t Wave_Unicode_CharUtf8_get_index(const struct Wave_Unicode_CharUtf8 ch) {
     const uint8_t length = Wave_Unicode_CharUtf8_get_length(ch);
     if (length == 0) {
         return 0;
     }
     if (length == 1) {
-        return ch;
+        return ch.bytes[0];
     }
     uint32_t index = 0;
 
-    uint8_t bytes[4];
-    *(uint32_t *)bytes = ch;
-
     for (uint8_t i = 0; i < length - 1; i++) {
-        index |= (((uint32_t)(bytes[length - i - 1]) & 63u) << (6 * i));
+        index |= (((uint32_t)(ch.bytes[length - i - 1]) & 63u) << (6 * i));
     }
 
     uint8_t wildcard;
@@ -97,7 +100,37 @@ uint32_t Wave_Unicode_CharUtf8_get_index(const Wave_Unicode_CharUtf8 ch) {
             break;
     }
 
-    index |= ((uint32_t)(bytes[0] & wildcard) << (6 * (length - 1)));
+    index |= ((uint32_t)(ch.bytes[0] & wildcard) << (6 * (length - 1)));
 
     return index;
+}
+
+struct Wave_Unicode_CharUtf8 Wave_Unicode_CharUtf8_assign(const unsigned char *const s) {
+    struct Wave_Unicode_CharUtf8 ch = {{0}};
+    //const size_t len = strlen(s);
+
+    const size_t expected_len = Wave_Unicode_CharUtf8_get_length_from_byte(*s);
+
+    if (expected_len == 0) {
+        return ch;
+    }
+
+    size_t len = 0;
+    for (len = 1; len < 4; len++) {
+        if (!Wave_Unicode_CharUtf8_is_multibyte_follower(s[len])) {
+            break;
+        }
+    }
+
+    if (len != expected_len) {
+        return ch;
+    }
+
+    memcpy(ch.bytes, s, len);
+
+    return ch;
+}
+
+bool Wave_Unicode_CharUtf8_is_multibyte_follower(const uint8_t byte) {
+    return ((byte & 192u) == (1u << 7));
 }

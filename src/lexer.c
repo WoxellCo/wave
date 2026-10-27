@@ -1,15 +1,14 @@
+#include "wave/def.h"
 #include <linux/limits.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 #include <wave/lexer.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "wave/_debug.h"
-#include "wave/def.h"
-#include "wave/error.h"
-#include "wave/lexer-fstr.h"
-#include "wave/token.h"
+#include <wave/_debug.h>
+#include <wave/lexer-fstr.h>
 
 struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
     struct Wave_CharLocation *const coords,
@@ -48,7 +47,8 @@ struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
     const char *src = source + offset + result.n;
     while (*src != '\0') {
         src = source + offset + result.n;
-        char ch = *src;
+        const char ch = *src;
+        const size_t ch_len = Wave_Unicode_CharUtf8_get_length_from_byte((uint8_t)ch);
         struct Wave_Token token = { // mk: default values that are optimal for those that don't use other tokenizers
             .type = 0,
             .location = *coords,
@@ -61,6 +61,11 @@ struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
                 result.flags |= WAVE_LEXER_TOKENIZE_RESULT_INTERRUPTED_BY_PREDICATE;
                 return result;
             }
+        }
+
+        if (ch_len != 1) { // mk: non-ascii utf-8 characters don't make any sense in the actual code
+            result.error.type = Wave_CompilationErrorType_UnexpectedCharacter;
+            return result;
         }
 
         if (ch == ' ' || ch == '\t') {
@@ -202,8 +207,10 @@ struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
         Wave_TokenVector_push(&result.token_vector, token);
 
         coords->column++;
+        coords->utf8_column++;
         result.n++;
         coords->index++;
+        coords->utf8_index++;
         src = source + offset + result.n;
     }
 
@@ -239,9 +246,15 @@ struct Wave_Lexer_TokenizeStringResult Wave_Lexer_tokenize_string(
     }
 
     const char *src = source + offset;
-    const char bounds = *src;
+    //const char bounds = *src;
+    const struct Wave_CharLocation_AdvanceResult bounds_result = Wave_CharLocation_advance(coords, src);
+    if (bounds_result.error.type != Wave_CompilationErrorType_None) {
+        result.error = bounds_result.error;
+        return result;
+    }
+    const struct Wave_Unicode_CharUtf8 bounds = bounds_result.ch;
 
-    if (bounds != '"' && bounds != '\'') {
+    if (bounds.bytes[0] != '"' && bounds.bytes[0] != '\'') {
         // mk: handle invalid string bound exception
         result.error.type = Wave_CompilationErrorType_InvalidStringBoundary;
         return result;
@@ -256,9 +269,16 @@ struct Wave_Lexer_TokenizeStringResult Wave_Lexer_tokenize_string(
 
     while (true) {
         src = source + offset + result.n;
-        char ch = *src;
-        coords->column++;
-        coords->index++;
+        //char ch = *src;
+        //coords->column++;
+        //coords->index++;
+        const struct Wave_CharLocation_AdvanceResult ch_result = Wave_CharLocation_advance(coords, src);
+        if (ch_result.error.type != Wave_CompilationErrorType_None) {
+            result.error = ch_result.error;
+            return result;
+        }
+        const struct Wave_Unicode_CharUtf8 ch = ch_result.ch;
+        const uint8_t ch_first = ch.bytes[0];
 
         if (delimiter_predicate != NULL) {
             if (delimiter_predicate(coords, NULL, source, coords->index)) {
@@ -269,9 +289,9 @@ struct Wave_Lexer_TokenizeStringResult Wave_Lexer_tokenize_string(
             }
         }
 
-        if (ch == '\0') {
+        if (ch_first == '\0') {
             result.error.type = Wave_CompilationErrorType_UnexpectedEndOfFile;
-            result.error.info.expected_sequence[0] = bounds;
+            result.error.info.expected_sequence[0] = (char)bounds.bytes[0];
             result.error.info.expected_sequence[1] = '\0';
             result.error.info_type = Wave_CompilationErrorInfoType_ExpectedSequence;
             Wave_String_delete(&s);
@@ -292,7 +312,7 @@ struct Wave_Lexer_TokenizeStringResult Wave_Lexer_tokenize_string(
             flags |= escape_mode;
             result.n++;
             continue;
-        } else if (*src == bounds) {
+        } else if (*src == bounds.bytes[0]) {
             result.n++;
             break;
         } else if (*src == '\n') {
@@ -303,7 +323,7 @@ struct Wave_Lexer_TokenizeStringResult Wave_Lexer_tokenize_string(
             continue;
         }
 
-        if (!Wave_String_push(&s, ch)) {
+        if (!Wave_String_push_utf8(&s, ch)) {
             result.error.type = Wave_CompilationErrorType_InvalidAllocation;
             Wave_String_delete(&s);
             return result;
@@ -312,7 +332,7 @@ struct Wave_Lexer_TokenizeStringResult Wave_Lexer_tokenize_string(
         if (flags & escape_seq)
             flags ^= escape_seq;
 
-        result.n++;
+        result.n += ch_result.n;
     }
 
     result.string_data = s;
@@ -712,8 +732,8 @@ struct Wave_Lexer_TokenizeNumberResult Wave_Lexer_tokenize_number(
     uint8_t prefix_length = 0;
 
     while (true) {
-        coords->column++;
-        coords->index++;
+        //coords->column++;
+        //coords->index++;
         if (delimiter_predicate != NULL) {
             if (delimiter_predicate(coords, token_counters, source, coords->index)) {
                 result.flags |= WAVE_LEXER_TOKENIZE_RESULT_INTERRUPTED_BY_PREDICATE;
@@ -722,7 +742,17 @@ struct Wave_Lexer_TokenizeNumberResult Wave_Lexer_tokenize_number(
         }
 
         src = source + offset + result.n;
-        ch = *src;
+        //ch = *src;
+        const struct Wave_CharLocation_AdvanceResult ch_result = Wave_CharLocation_advance(coords, src);
+        if (ch_result.error.type != Wave_CompilationErrorType_None) {
+            result.error = ch_result.error;
+            return result;
+        }
+        if (ch_result.n != 1) {
+            result.error.type = Wave_CompilationErrorType_UnexpectedCharacter;
+            return result;
+        }
+        ch = (char)ch_result.ch.bytes[0];
 
         if (ch == '.') {
             if (number.flags & Wave_Numeric_FLOAT) {
@@ -740,6 +770,15 @@ struct Wave_Lexer_TokenizeNumberResult Wave_Lexer_tokenize_number(
                 } else {
                     break;
                 }
+            } else if (src[1] >= '0' && src[1] <= '9') {
+                // mk: i've decided that something like `2.` won't be part of a number to allow methods like `2.to_string()`
+                if (delimiter_predicate != NULL) {
+                    if (delimiter_predicate(coords, token_counters, source, offset + result.n + 1)) {
+                        break;
+                    }
+                }
+            } else {
+                break;
             }
 
             if (number.format != Wave_NumericFormat_Dec) {

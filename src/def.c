@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <wave/token.h>
 #include <wave/numeric.h>
+#include <wave/unicode.h>
 
 struct Wave_TokenVector Wave_TokenVector_new(const size_t capacity) {
     struct Wave_TokenVector vector = (struct Wave_TokenVector){
@@ -46,97 +47,6 @@ void Wave_TokenVector_delete(struct Wave_TokenVector *const vector) {
     vector->tokens = NULL;
     vector->size = 0;
     vector->capacity = 0;
-}
-
-struct Wave_String Wave_String_new(const size_t capacity) {
-    struct Wave_String s = (struct Wave_String){
-        .str = NULL,
-        .length = 0,
-        .capacity = 0
-    };
-
-    if (capacity == 0)
-        return s;
-
-    s.str = (char *)malloc(capacity * sizeof(char));
-
-    if (s.str != NULL) {
-        s.capacity = capacity;
-        s.str[0] = '\0';
-    }
-
-    return s;
-}
-
-struct Wave_String Wave_String_from_and_max_len(const char *const str, const size_t max_len) {
-    struct Wave_String s = Wave_String_new(max_len + 1);
-
-    if (s.capacity == 0)
-        return s;
-
-    size_t i;
-    for (i = 0; i < max_len; i++) {
-        s.str[i] = str[i];
-        if (str[i] == '\0')
-            break;
-    }
-
-    s.str[max_len] = '\0';
-    s.length = i;
-    s.capacity = max_len + 1;
-
-    return s;
-}
-
-struct Wave_String Wave_String_from(const char *const str) {
-    const size_t str_len = strlen(str);
-    struct Wave_String s = Wave_String_from_and_max_len(str, str_len);
-    return s;
-}
-
-void Wave_String_delete(struct Wave_String *const s) {
-    free(s->str);
-    *s = Wave_String_null;
-}
-
-bool Wave_String_reserve(struct Wave_String *const s, const size_t capacity) {
-    if (capacity > s->capacity) {
-        char *const reallocated = (char *)realloc(s->str, capacity * sizeof(char));
-        if (reallocated == NULL)
-            return false;
-        s->str = reallocated;
-        s->capacity = capacity;
-    }
-
-    return true;
-}
-
-bool Wave_String_push(struct Wave_String *const s, const char ch) {
-    if ((s->length + 1) >= s->capacity) {
-        const size_t new_cap = s->capacity * 2;
-        if (!Wave_String_reserve(s, new_cap))
-            return false;
-    }
-
-    s->str[s->length] = ch;
-    s->length++;
-    s->str[s->length] = '\0';
-
-    return true;
-}
-
-bool Wave_String_append(struct Wave_String *const s, const char *const str) {
-    const size_t str_len = strlen(str);
-    
-    if ((s->length + str_len + 1) > s->capacity)
-        if (!Wave_String_reserve(s, s->length + str_len + 1))
-            return false;
-
-    strcpy(s->str + s->length, str);
-    s->length += str_len;
-    s->str[s->length] = '\0';
-
-    return true;
 }
 
 // mk: tried to not use the string conversion from the libc, but i'm too lazy to implement one myself

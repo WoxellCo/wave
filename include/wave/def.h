@@ -4,26 +4,14 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <string.h>
+#include <wave/string.h>
 
 
-
-struct Wave_String {
-    char *str;
-    size_t length;
-    size_t capacity;
-};
 
 /*union Wave_TokenData {
     
 };*/
 
-// mk: determines which row and column is a specific character, useful for error handling
-struct Wave_CharLocation {
-    char *path;
-    size_t row, column;
-    size_t index;
-};
 
 // mk: type of errors during compilation
 enum Wave_CompilationErrorType {
@@ -37,6 +25,7 @@ enum Wave_CompilationErrorType {
     Wave_CompilationErrorType_UnexpectedCharacter,
     Wave_CompilationErrorType_NumberOutOfRange,
     Wave_CompilationErrorType_InvalidFloatToIntLiteral,
+    Wave_CompilationErrorType_InvalidUtf8Character,
 };
 
 enum Wave_CompilationErrorInfoType {
@@ -56,16 +45,6 @@ struct Wave_CompilationError {
 };
 
 #define Wave_CompilationError_none {.type = Wave_CompilationErrorType_None, .info = {0}, .info_type = Wave_CompilationErrorInfoType_None}
-
-#define Wave_String_null ((struct Wave_String){NULL, 0, 0})
-#define Wave_String_is_null(s) ((s).str == NULL && (s).capacity == 0)
-
-struct Wave_String Wave_String_new(const size_t capacity);
-struct Wave_String Wave_String_from(const char *const str);
-struct Wave_String Wave_String_from_and_max_len(const char *const str, const size_t max_len);
-void Wave_String_delete(struct Wave_String *const s);
-bool Wave_String_push(struct Wave_String *const s, const char ch);
-bool Wave_String_append(struct Wave_String *const s, const char *const str);
 
 struct Wave_Identifier {
     struct Wave_String id;

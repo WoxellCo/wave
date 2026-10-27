@@ -36,4 +36,4 @@ render_ui(
     </Window>
 );
 
-$"hello {name:>10}"
+$"hello {name:>10}";

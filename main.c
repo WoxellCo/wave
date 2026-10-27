@@ -19,12 +19,12 @@ int main(void) {
         }
     }
 
-    Wave_Unicode_CharUtf8 ch = Wave_Unicode_CharUtf8_get_at(65);
-    Wave_Debug_bitset32_dump(ch);
+    struct Wave_Unicode_CharUtf8 ch = Wave_Unicode_CharUtf8_get_at(0x10F223);
+    //Wave_Debug_bitset32_dump(ch);
     printf("\'%.*s\'\n", Wave_Unicode_CharUtf8_get_length(ch), (char *)&ch);
-    memcpy(&ch, "ÿ", 2);
+    ch = Wave_Unicode_CharUtf8_assign("abc");
     printf("\'%.*s\'\n", Wave_Unicode_CharUtf8_get_length(ch), (char *)&ch);
-    Wave_Debug_bitset32_dump(ch);
+    //Wave_Debug_bitset32_dump(ch);
 
     const unsigned char *p = (const unsigned char *)&ch;
     printf("%02X %02X %02X %02X\n", p[0], p[1], p[2], p[3]);

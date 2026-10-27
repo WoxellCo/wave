@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <wave/def.h>
 #include <wave/numeric.h>
+#include <wave/char-location.h>
 
 enum Wave_TokenType {
     Wave_TokenType_ID,          // identifier
