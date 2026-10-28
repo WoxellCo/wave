@@ -2,6 +2,7 @@
 #define WAVE_ERROR_H
 
 #include <wave/def.h>
+#include <wave/char-location.h>
 
 struct Wave_String Wave_Error_compilation_error_to_string(
     const struct Wave_CharLocation *const coords,

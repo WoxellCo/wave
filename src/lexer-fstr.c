@@ -1,4 +1,5 @@
 #include "wave/def.h"
+#include <string.h>
 #include <wave/lexer-fstr.h>
 
 struct Wave_Lexer_TokenizeFstrResult Wave_Lexer_tokenize_fstr(

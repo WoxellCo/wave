@@ -14,7 +14,7 @@ struct Wave_TokenString_EscVector {
 struct Wave_TokenString_Esc {
     struct Wave_String sequence;    // mk: the sequence will be stored in a string, useful for linting and lsp
     struct Wave_String output;      // mk: the output character(s) produced by the sequence
-    size_t start_index;             // mk: the start index matches the first byte of the character that replaces
+    size_t start_index;             // mk: the start index matches the first byte of the character that gets replaced
     //uint8_t char_count;           // mk: how many bytes does the output utf-x character have, usually is one, but some cases can have multiple, example `\u{1F98A}` is `🦊`
                                     // mk: nvm i changed my mind.
 };

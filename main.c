@@ -1,5 +1,5 @@
-#include "wave/_debug.h"
-#include "wave/def.h"
+#include <wave/_debug.h>
+#include <wave/_test.h>
 #include "wave/lexer.h"
 #include "wave/unicode.h"
 #include <locale.h>
@@ -18,6 +18,8 @@ int main(void) {
             }
         }
     }
+
+    Wave_Test_escape_sequences();
 
     struct Wave_Unicode_CharUtf8 ch = Wave_Unicode_CharUtf8_get_at(0x10F223);
     //Wave_Debug_bitset32_dump(ch);

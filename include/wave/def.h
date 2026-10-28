@@ -26,6 +26,8 @@ enum Wave_CompilationErrorType {
     Wave_CompilationErrorType_NumberOutOfRange,
     Wave_CompilationErrorType_InvalidFloatToIntLiteral,
     Wave_CompilationErrorType_InvalidUtf8Character,
+    Wave_CompilationErrorType_InvalidValue,
+    Wave_CompilationErrorType_InvalidSequence,
 };
 
 enum Wave_CompilationErrorInfoType {
