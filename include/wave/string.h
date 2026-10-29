@@ -31,5 +31,6 @@ struct Wave_String Wave_String_view_new(const char *const str, const size_t max_
 // mk: returns the diff size in bytes
 size_t Wave_String_view_expand_utf8(struct Wave_String *const s, const size_t utf8_chars_count);
 size_t Wave_String_view_shrink_utf8(struct Wave_String *const s, const size_t utf8_chars_count);
+bool Wave_String_view_to_owned(struct Wave_String *const s);
 
 #endif

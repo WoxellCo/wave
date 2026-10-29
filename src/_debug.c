@@ -5,7 +5,7 @@
 
 void Wave_Debug_string_dump(const struct Wave_String s) {
     printf("WAVE STRING DEBUG (length: %zu, size: %zu)\n", s.length, s.capacity);
-    puts(s.data.str);
+    printf("---[\"\"\"%.*s\"\"\"]---", (int)s.length, s.data.str);
     printf("WAVE STRING DEBUG END\n\n");
 }
 
@@ -92,8 +92,12 @@ void Wave_Debug_bitset32_dump(const uint32_t value) {
 void Wave_Debug_token_string_esc(const struct Wave_TokenString_Esc *const token) {
     printf("WAVE TOKEN STRING ESC DEBUG: \n");
 
-    printf("\toutput: \"%s\"\n", token->output.data.str);
-    printf("\tsequence: \"%s\"\n", token->sequence.data.str);
+    printf("\toutput: \"");
+    Wave_Debug_print_string(token->output);
+    printf("\"\n");
+    printf("\tsequence: \"");
+    Wave_Debug_print_string(token->sequence);
+    printf("\"\n");
     printf("\tstart_index: \"%zu\"\n", token->start_index);
 
     printf("WAVE TOKENIZE ESC RESULT DEBUG END\n\n");
@@ -109,4 +113,13 @@ void Wave_Debug_tokenize_esc_result(const struct Wave_Lexer_TokenizeEscResult *c
     Wave_Debug_token_string_esc(&token_result->data);
     
     printf("WAVE TOKENIZE ESC RESULT DEBUG END\n\n");
+}
+
+void Wave_Debug_print_string(const struct Wave_String s) {
+    printf("%.*s", (int)s.length, s.data.str);
+}
+
+void Wave_Debug_println_string(const struct Wave_String s) {
+    Wave_Debug_print_string(s);
+    putc('\n', stdout);
 }

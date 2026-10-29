@@ -60,7 +60,8 @@ struct Wave_String Wave_String_from(const char *const str) {
 }
 
 void Wave_String_delete(struct Wave_String *const s) {
-    free(s->data.mut_str);
+    if (!Wave_String_is_view(*s))
+        free(s->data.mut_str);
     *s = Wave_String_null;
 }
 
@@ -175,7 +176,7 @@ struct Wave_String Wave_String_view_new(const char *const str, const size_t max_
         return s;
 
     while (str[s.length] != '\0' && s.utf8_length < max_utf8_length) {
-        s.length += s.utf8_length += Wave_Unicode_CharUtf8_get_length_from_byte((uint8_t)str[s.length]);
+        s.length += Wave_Unicode_CharUtf8_get_length_from_byte((uint8_t)str[s.length]);
         s.utf8_length++;
     }
 
@@ -184,10 +185,12 @@ struct Wave_String Wave_String_view_new(const char *const str, const size_t max_
 
 size_t Wave_String_view_expand_utf8(struct Wave_String *const s, const size_t utf8_chars_count) {
     size_t n = 0;
+    size_t utf8_count = 0;
 
-    while (s->data.str[s->length] != '\0' && s->utf8_length < utf8_chars_count) {
-        n += s->utf8_length += Wave_Unicode_CharUtf8_get_length_from_byte((uint8_t)s->data.str[s->length]);
+    while (s->data.str[s->length + n] != '\0' && utf8_count < utf8_chars_count) {
+        n += Wave_Unicode_CharUtf8_get_length_from_byte((uint8_t)s->data.str[s->length + n]);
         s->utf8_length++;
+        utf8_count++;
     }
     s->length += n;
     return n;
@@ -197,3 +200,20 @@ size_t Wave_String_view_expand_utf8(struct Wave_String *const s, const size_t ut
 /*size_t Wave_String_view_shrink_utf8(struct Wave_String *const s, const size_t utf8_chars_count) {
 
 }*/
+
+bool Wave_String_view_to_owned(struct Wave_String *const s) {
+    if (Wave_String_is_null(*s) || !Wave_String_is_view(*s))
+        return false;
+
+    const size_t cap = s->length + 1;
+    char *const block = (char *const)malloc(cap * sizeof(char));
+    if (block == NULL)
+        return false;
+
+    strncpy(block, s->data.str, s->length);
+    s->data.str = block;
+    s->data.mut_str[s->length] = '\0';
+    s->capacity = cap;
+
+    return true;
+}
