@@ -1033,8 +1033,8 @@ struct Wave_Lexer_TokenizeNumberResult Wave_Lexer_tokenize_number(
             number.flags |= Wave_Numeric_SCIENTIFIC;
             number.flags |= Wave_Numeric_FLOAT;
             result.n++;
-            coords->index++;
-            coords->column++;
+            //coords->index++;
+            //coords->column++;
         } else if ((ch == 'a' || (ch >= 'c' && ch <= 'e')) || (ch == 'A' || (ch >= 'C' && ch <= 'F'))
             || (ch == 'f' && (number.format == Wave_NumericFormat_Hex)) // mk: yeah this can either be part of hex or represent `f32` or `f64`
             || ((ch == 'b' || ch == 'B') && (number.format == Wave_NumericFormat_Hex)) // mk: `0b100` or `0x10b`? (disambiguity)
@@ -1129,6 +1129,7 @@ struct Wave_Lexer_TokenizeNumberResult Wave_Lexer_tokenize_number(
 
     result.n += number.suffix_length;
 
+    printf("result.n (number): %zu\n", result.n);
     printf("\n%zu %d\n\n", floating_position_index, number.suffix_length);
 
     // mk: finally it's time to convert

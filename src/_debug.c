@@ -3,6 +3,14 @@
 #include <wave/_debug.h>
 #include <stdio.h>
 
+#define WAVE_DEBUG_BEGIN_TEMPLATE   "WAVE %s DEBUG: \n"
+#define WAVE_DEBUG_END_TEMPLATE     "WAVE %s DEBUG END\n"
+
+#define WAVE_DEBUG_TOKENIZE_RESULT_META \
+    printf("\tn: %zu\n", token_result->n); \
+    printf("\terror.type: %u\n", token_result->error.type); \
+    printf("\terror.data: ");
+
 void Wave_Debug_string_dump(const struct Wave_String s) {
     printf("WAVE STRING DEBUG (length: %zu, size: %zu)\n", s.length, s.capacity);
     printf("---[\"\"\"%.*s\"\"\"]---", (int)s.length, s.data.str);
@@ -40,7 +48,7 @@ void Wave_Debug_numeric_dump(const struct Wave_Numeric n) {
                 break;
             default:
             case 64:
-                printf("%lu", n.data.u64);
+                printf("%llu", n.data.u64);
                 break;
         }
     } else {
@@ -56,7 +64,7 @@ void Wave_Debug_numeric_dump(const struct Wave_Numeric n) {
                 break;
             default:
             case 64:
-                printf("%ld", n.data.i64);
+                printf("%lld", n.data.i64);
                 break;
         }
     }
@@ -106,13 +114,21 @@ void Wave_Debug_token_string_esc(const struct Wave_TokenString_Esc *const token)
 void Wave_Debug_tokenize_esc_result(const struct Wave_Lexer_TokenizeEscResult *const token_result) {
     printf("WAVE TOKENIZE ESC RESULT DEBUG: \n");
 
-    printf("\tn: %zu\n", token_result->n);
-    printf("\terror.type: %u\n", token_result->error.type);
-    printf("\terror.data: ");
+    WAVE_DEBUG_TOKENIZE_RESULT_META
 
     Wave_Debug_token_string_esc(&token_result->data);
     
     printf("WAVE TOKENIZE ESC RESULT DEBUG END\n\n");
+}
+
+void Wave_Debug_tokenize_number_result(const struct Wave_Lexer_TokenizeNumberResult *const token_result) {
+    printf(WAVE_DEBUG_BEGIN_TEMPLATE, "TOKENIZE NUMBER RESULT");
+
+    WAVE_DEBUG_TOKENIZE_RESULT_META
+
+    Wave_Debug_numeric_dump(token_result->number);
+
+    printf(WAVE_DEBUG_END_TEMPLATE, "TOKENIZE NUMBER RESULT");
 }
 
 void Wave_Debug_print_string(const struct Wave_String s) {

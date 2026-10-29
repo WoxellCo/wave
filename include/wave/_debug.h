@@ -15,4 +15,6 @@ void Wave_Debug_println_string(const struct Wave_String s);
 void Wave_Debug_token_string_esc(const struct Wave_TokenString_Esc *const token);
 void Wave_Debug_tokenize_esc_result(const struct Wave_Lexer_TokenizeEscResult *const token_result);
 
+void Wave_Debug_tokenize_number_result(const struct Wave_Lexer_TokenizeNumberResult *const token_result);
+
 #endif
