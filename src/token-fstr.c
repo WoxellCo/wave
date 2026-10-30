@@ -1,20 +1,14 @@
+#include "wave/lexer.h"
 #include "wave/token.h"
 #include <wave/token-fstr.h>
 #include <stdlib.h>
 
 //bool Wave_Fstr_expr_delimeter_predicate(const Wave_Lexer_DelimiterPredicate user_delimiter_predicate);
 bool Wave_Fstr_expr_delimeter_predicate(
-    const struct Wave_CharLocation *const coords,
-    const struct Wave_TokenCounters *const token_counters,
-    const char *const source,
-    const size_t n,
-    const struct Wave_Lexer_EncapsulatedDelimiterPredicate *const chain
+    const struct Wave_Lexer_DelimiterPredicateParams params
 )
-{
-    if (chain != NULL && chain->delimiter_predicate(coords, token_counters, source, n, NULL))
-        return true;
-    
-    return (source[n] == ':' || source[n] == '}') && Wave_Token_do_counters_match(token_counters);
+{   
+    return (params.source[params.n] == ':' || params.source[params.n] == '}') && Wave_Token_do_counters_match(params.token_counters);
 }
 
 struct Wave_TokenFstr_EscOrExprVector Wave_TokenString_EscOrExprVector_new(const size_t capacity) {

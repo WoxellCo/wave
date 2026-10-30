@@ -26,6 +26,7 @@ void Wave_Debug_numeric_dump(const struct Wave_Numeric n) {
 
     printf("\tbits (0 = default): %u\n", n.bits);
 
+    printf("\tvalue: ");
     if (n.flags & Wave_Numeric_FLOAT) {
         //if (n.bits == 32) {
             //Wave_String_append(&format, "%.3f");

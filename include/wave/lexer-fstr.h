@@ -15,7 +15,7 @@ struct Wave_Lexer_TokenizeFstrResult Wave_Lexer_tokenize_fstr(
     struct Wave_CharLocation *const coords,
     const char *const source,
     const size_t offset,
-    const Wave_Lexer_DelimiterPredicate delimiter_predicate,
+    const Wave_Lexer_DelimiterPredicate delimiter_predicates[const],
     const struct Wave_TokenCounters *const token_counters
 );
 
