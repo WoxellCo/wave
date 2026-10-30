@@ -23,6 +23,8 @@ int main(void) {
 
     Wave_Test_escape_sequences();
 
+    Wave_Test_string_literals();
+
     struct Wave_Unicode_CharUtf8 ch = Wave_Unicode_CharUtf8_get_at(0x10F223);
     //Wave_Debug_bitset32_dump(ch);
     printf("\'%.*s\'\n", Wave_Unicode_CharUtf8_get_length(ch), (char *)&ch);
@@ -64,5 +66,7 @@ int main(void) {
 
     printf("STRLEN: %zu\n", strlen(buffer));
 
-    Wave_Lexer_tokenize(&loc, buffer, 0, NULL);
+    //Wave_Lexer_tokenize(&loc, buffer, 0, NULL);
+
+    free(buffer);
 }

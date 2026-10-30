@@ -1,6 +1,7 @@
 #ifndef WAVE_LEXER_H
 #define WAVE_LEXER_H
 
+#include "wave/string.h"
 #include "wave/token-string.h"
 #include <stddef.h>
 #include <stdint.h>
@@ -18,12 +19,20 @@ struct Wave_Lexer_TokenizeResult {
     uint8_t flags;                  // mk: in this case it signals if the cycle was interrputed by the predicate
 };
 
+// mk: i absolutely hate this weird c declaration hack
+struct Wave_Lexer_EncapsulatedDelimiterPredicate;
+
 typedef bool(*const Wave_Lexer_DelimiterPredicate)(
     const struct Wave_CharLocation *const coords,           // mk: information of the char positions passed
     const struct Wave_TokenCounters *const token_counters,  // mk: the predicate needs to know if it can actually terminate the script based on the counts
     const char *const source,                               // mk: the source the predicate has to check (source + n)
-    const size_t n                                          // mk: number of processed characters (excluding delimiter)
+    const size_t n,                                         // mk: number of processed characters (excluding delimiter)
+    const struct Wave_Lexer_EncapsulatedDelimiterPredicate *const chain
 );
+
+struct Wave_Lexer_EncapsulatedDelimiterPredicate {
+    Wave_Lexer_DelimiterPredicate delimiter_predicate;
+};
 
 struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
     struct Wave_CharLocation *const coords,                 // mk: initial coords, it mutates during the execution
@@ -105,5 +114,10 @@ struct Wave_Lexer_TokenizeEscResult Wave_Lexer_tokenize_esc(
     const size_t offset,
     const Wave_Lexer_DelimiterPredicate delimiter_predicate
 );
+
+// mk: easy clean up result token helper functions, they completely free heap allocated memory
+void Wave_Lexer_clean_token_esc(struct Wave_Lexer_TokenizeEscResult *const token_result);
+void Wave_Lexer_clean_token_string(struct Wave_Lexer_TokenizeStringResult *const token_result);
+void Wave_Lexer_clean_token_symbol(struct Wave_Lexer_TokenizeSymbolResult *const token_result);
 
 #endif

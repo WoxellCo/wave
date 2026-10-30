@@ -183,6 +183,7 @@ struct Wave_String Wave_String_view_new(const char *const str, const size_t max_
     return s;
 }
 
+// mk: `size_t` => amount of bytes
 size_t Wave_String_view_expand_utf8(struct Wave_String *const s, const size_t utf8_chars_count) {
     size_t n = 0;
     size_t utf8_count = 0;

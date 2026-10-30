@@ -112,7 +112,7 @@ bool Wave_Numeric_string_to_number(
     strncpy(buffer, s, length);
     buffer[length] = '\0';
 
-    puts(buffer);
+    //puts(buffer);
 
     if (number->flags & Wave_Numeric_FLOAT) {
         // mk: floats are decimal only
@@ -149,6 +149,8 @@ bool Wave_Numeric_string_to_number(
         // mk: signed integer
         // mk: actually no.
     //}
+
+    free(buffer);
 
     return true;
 }

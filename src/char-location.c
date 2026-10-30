@@ -20,6 +20,7 @@ struct Wave_CharLocation_AdvanceResult Wave_CharLocation_advance(
     }
 
     result.n = Wave_Unicode_CharUtf8_get_length(ch);
+    result.ch = ch;
 
     if (ch.bytes[0] == '\n') {
         loc->column = 0;

@@ -1,4 +1,5 @@
 #include "wave/def.h"
+#include "wave/lexer.h"
 #include <stdint.h>
 #include <wave/_debug.h>
 #include <stdio.h>
@@ -48,7 +49,11 @@ void Wave_Debug_numeric_dump(const struct Wave_Numeric n) {
                 break;
             default:
             case 64:
+                #if UINT64_MAX == ULLONG_MAX
                 printf("%llu", n.data.u64);
+                #else
+                printf("%lu", n.data.u64);
+                #endif
                 break;
         }
     } else {
@@ -64,7 +69,11 @@ void Wave_Debug_numeric_dump(const struct Wave_Numeric n) {
                 break;
             default:
             case 64:
+                #if INT64_MAX == LLONG_MAX
                 printf("%lld", n.data.i64);
+                #else
+                printf("%ld", n.data.i64);
+                #endif
                 break;
         }
     }
@@ -129,6 +138,16 @@ void Wave_Debug_tokenize_number_result(const struct Wave_Lexer_TokenizeNumberRes
     Wave_Debug_numeric_dump(token_result->number);
 
     printf(WAVE_DEBUG_END_TEMPLATE, "TOKENIZE NUMBER RESULT");
+}
+
+void Wave_Debug_tokenize_string_result(const struct Wave_Lexer_TokenizeStringResult *const token_result) {
+    printf(WAVE_DEBUG_BEGIN_TEMPLATE, "TOKENIZE STRING RESULT");
+
+    WAVE_DEBUG_TOKENIZE_RESULT_META
+
+    Wave_Debug_string_dump(token_result->string_data);
+
+    printf(WAVE_DEBUG_END_TEMPLATE, "TOKENIZE STRING RESULT");
 }
 
 void Wave_Debug_print_string(const struct Wave_String s) {

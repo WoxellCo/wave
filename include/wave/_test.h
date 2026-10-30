@@ -7,5 +7,6 @@
 struct Wave_CharLocation Wave_Test_no_loc(void);
 bool Wave_Test_escape_sequences(void);
 bool Wave_Test_number_literals(void);
+bool Wave_Test_string_literals(void);
 
 #endif

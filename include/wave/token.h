@@ -185,4 +185,6 @@ struct Wave_Token {
     } data;
 };
 
+bool Wave_Token_do_counters_match(const struct Wave_TokenCounters *const counters);
+
 #endif

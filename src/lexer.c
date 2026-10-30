@@ -57,7 +57,7 @@ struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
         };
 
         if (delimiter_predicate != NULL) {
-            if (delimiter_predicate(coords, &token_counters, source, offset + result.n)) {
+            if (delimiter_predicate(coords, &token_counters, source, offset + result.n, NULL)) {
                 result.flags |= WAVE_LEXER_TOKENIZE_RESULT_INTERRUPTED_BY_PREDICATE;
                 return result;
             }
@@ -282,7 +282,7 @@ struct Wave_Lexer_TokenizeStringResult Wave_Lexer_tokenize_string(
         const uint8_t ch_first = ch.bytes[0];
 
         if (delimiter_predicate != NULL) {
-            if (delimiter_predicate(coords, NULL, source, coords->index)) {
+            if (delimiter_predicate(coords, NULL, source, coords->index, NULL)) {
                 result.error.type = Wave_CompilationErrorType_UnexpectedBoundary;
                 Wave_String_delete(&s);
                 result.flags |= WAVE_LEXER_TOKENIZE_RESULT_INTERRUPTED_BY_PREDICATE;
@@ -300,26 +300,37 @@ struct Wave_Lexer_TokenizeStringResult Wave_Lexer_tokenize_string(
         }
 
         if (ch_first == '\\') {
-            const struct Wave_Lexer_TokenizeEscResult token_result = Wave_Lexer_tokenize_esc(coords, source, offset + result.n, delimiter_predicate);
+            struct Wave_Lexer_TokenizeEscResult token_result = Wave_Lexer_tokenize_esc(coords, source, offset + result.n, delimiter_predicate);
             if (token_result.error.type != Wave_CompilationErrorType_None) {
                 result.error = token_result.error;
+                Wave_String_delete(&s);
                 return result;
             }
             if (token_result.flags & WAVE_LEXER_TOKENIZE_RESULT_INTERRUPTED_BY_PREDICATE) {
                 result.flags |= WAVE_LEXER_TOKENIZE_RESULT_INTERRUPTED_BY_PREDICATE;
                 result.error.type = Wave_CompilationErrorType_UnexpectedBoundary;
+                Wave_String_delete(&s);
                 return result;
             }
-            if (!Wave_String_view_to_owned(&s)) {
+            if (Wave_String_is_view(s) && !Wave_String_view_to_owned(&s)) {
                 result.error.type = Wave_CompilationErrorType_InvalidAllocation;
+                Wave_String_delete(&s);
                 return result;
             }
             if (!Wave_String_append(&s, token_result.data.output.data.str)) {
                 result.error.type = Wave_CompilationErrorType_InvalidAllocation;
+                Wave_String_delete(&s);
                 return result;
             }
             result.n += token_result.n;
+            Wave_Lexer_clean_token_esc(&token_result);
+            // mk: remove the `"` or `'` already added before which is one utf-8 char and one byte
+            //result.n--; // mk: but not here, becase unlike the charlocation, `result.n` is updated after, but it hits `continue` before
+            coords->column--;
+            coords->utf8_column--;
+            continue;
         } else if (*src == bounds.bytes[0]) {
+            result.n++;
             break;
         }
 
@@ -373,7 +384,7 @@ struct Wave_Lexer_TokenizeEscResult Wave_Lexer_tokenize_esc(
     const Wave_Lexer_DelimiterPredicate delimiter_predicate
 ) {
     if (delimiter_predicate != NULL)
-        delimiter_predicate(coords, NULL, NULL, 0);
+        delimiter_predicate(coords, NULL, NULL, 0, NULL);
     struct Wave_Lexer_TokenizeEscResult result = {
         .error = Wave_CompilationError_none,
         .data = {Wave_String_null, Wave_String_null, 0},
@@ -436,7 +447,9 @@ struct Wave_Lexer_TokenizeEscResult Wave_Lexer_tokenize_esc(
         case 'v': ch = '\v'; break;
         case '$': ch =  '$'; break;
         case '{': ch =  '{'; break;
+        case '\'':ch = '\''; break;
         case '\\':ch = '\\'; break;
+        case '"': ch =  '"'; break;
         default:             break;
     }
 
@@ -455,7 +468,7 @@ struct Wave_Lexer_TokenizeEscResult Wave_Lexer_tokenize_esc(
             result.n += Wave_CharLocation_advance_by(coords, src, 1);
             src = source + offset + result.n;
             if (delimiter_predicate != NULL) {
-                if (delimiter_predicate(coords, NULL, source, coords->index)) {
+                if (delimiter_predicate(coords, NULL, source, coords->index, NULL)) {
                     // mk: unfinished escape sequence
                     Wave_String_delete(&result.data.sequence);
                     Wave_String_delete(&result.data.output);
@@ -513,7 +526,7 @@ struct Wave_Lexer_TokenizeEscResult Wave_Lexer_tokenize_esc(
                 result.n += Wave_CharLocation_advance_by(coords, src, 1);
                 src = source + offset + result.n;
                 if (delimiter_predicate != NULL) {
-                    if (delimiter_predicate(coords, NULL, source, coords->index)) {
+                    if (delimiter_predicate(coords, NULL, source, coords->index, NULL)) {
                         // mk: unfinished escape sequence
                         Wave_String_delete(&result.data.sequence);
                         Wave_String_delete(&result.data.output);
@@ -552,7 +565,7 @@ struct Wave_Lexer_TokenizeEscResult Wave_Lexer_tokenize_esc(
                 result.n += Wave_CharLocation_advance_by(coords, src, 1);
                 src = source + offset + result.n;
                 if (delimiter_predicate != NULL) {
-                    if (delimiter_predicate(coords, NULL, source, coords->index)) {
+                    if (delimiter_predicate(coords, NULL, source, coords->index, NULL)) {
                         // mk: unfinished escape sequence
                         Wave_String_delete(&result.data.sequence);
                         Wave_String_delete(&result.data.output);
@@ -777,7 +790,7 @@ struct Wave_Lexer_TokenizeSymbolResult Wave_Lexer_tokenize_symbol(
         coords->index++;
 
         if (delimiter_predicate != NULL) {
-            if (delimiter_predicate(coords, NULL, source, coords->index)) {
+            if (delimiter_predicate(coords, NULL, source, coords->index, NULL)) {
                 break;
             }
         }
@@ -827,7 +840,7 @@ struct Wave_Lexer_TokenizeOperatorResult Wave_Lexer_tokenize_operator(
     uint8_t max_chars = 3;
     if (delimiter_predicate != NULL) {
         for (uint8_t i = 1; i <= 3; i++) {
-            if (delimiter_predicate(coords, NULL, source, coords->index + i)) {
+            if (delimiter_predicate(coords, NULL, source, coords->index + i, NULL)) {
                 max_chars = i;
 
                 result.flags |= WAVE_LEXER_TOKENIZE_RESULT_INTERRUPTED_BY_PREDICATE;
@@ -938,7 +951,7 @@ struct Wave_Lexer_TokenizeNumberResult Wave_Lexer_tokenize_number(
         //coords->column++;
         //coords->index++;
         if (delimiter_predicate != NULL) {
-            if (delimiter_predicate(coords, token_counters, source, coords->index)) {
+            if (delimiter_predicate(coords, token_counters, source, coords->index, NULL)) {
                 result.flags |= WAVE_LEXER_TOKENIZE_RESULT_INTERRUPTED_BY_PREDICATE;
                 return result;
             }
@@ -967,7 +980,7 @@ struct Wave_Lexer_TokenizeNumberResult Wave_Lexer_tokenize_number(
                 // mk: that's a range (`..`) or `...`, therefore it's not part of the number
                 // mk: but i gotta check if the next dot is part of wave or not first
                 if (delimiter_predicate != NULL) {
-                    if (!delimiter_predicate(coords, token_counters, source, offset + result.n + 1)) {
+                    if (!delimiter_predicate(coords, token_counters, source, offset + result.n + 1, NULL)) {
                         break;
                     }
                 } else {
@@ -976,7 +989,7 @@ struct Wave_Lexer_TokenizeNumberResult Wave_Lexer_tokenize_number(
             } else if (src[1] >= '0' && src[1] <= '9') {
                 // mk: i've decided that something like `2.` won't be part of a number to allow methods like `2.to_string()`
                 if (delimiter_predicate != NULL) {
-                    if (delimiter_predicate(coords, token_counters, source, offset + result.n + 1)) {
+                    if (delimiter_predicate(coords, token_counters, source, offset + result.n + 1, NULL)) {
                         break;
                     }
                 }
@@ -999,12 +1012,14 @@ struct Wave_Lexer_TokenizeNumberResult Wave_Lexer_tokenize_number(
             // mk: keeping separate because it should handle binary format notation
         } else if (ch >= '2' && ch <= '7') {
             if (number.format == Wave_NumericFormat_Bin) {
-                break;
+                result.error.type = Wave_CompilationErrorType_UnexpectedCharacter;
+                return result;
             }
         } else if (ch == '8' || ch == '9') {
             if (number.format == Wave_NumericFormat_Bin ||
                 number.format == Wave_NumericFormat_Oct) {
-                break;
+                result.error.type = Wave_CompilationErrorType_UnexpectedCharacter;
+                return result;
             }
         } else if ((ch == 'e' || ch == 'E') && (number.format == Wave_NumericFormat_Dec)) { // mk: dw about `e` being in the first position (which wouldn't be a valid number), it's already handled by the condition before the loop
             // mk: scientific notation
@@ -1020,7 +1035,7 @@ struct Wave_Lexer_TokenizeNumberResult Wave_Lexer_tokenize_number(
 
             // mk: check on the fly if it's valid scientific notation like `3e-4`
             if (delimiter_predicate != NULL) {
-                if (delimiter_predicate(coords, token_counters, source, offset + result.n + 1)) {
+                if (delimiter_predicate(coords, token_counters, source, offset + result.n + 1, NULL)) {
                     // mk: like `1.3e}` => syntax error, will be caught later because it breaks discarding the `e` as well and the `e` will be treated as an identifier which is an invalid token because it's right after a numeric literal
                     break;
                 }
@@ -1102,7 +1117,7 @@ struct Wave_Lexer_TokenizeNumberResult Wave_Lexer_tokenize_number(
             number.flags |= Wave_Numeric_FLOAT;
 
             if (src[1] == '3' && src[2] == '2') { //                                    32
-                if (src[2] >= '0' && src[3] <= '9') {
+                if (src[3] >= '0' && src[3] <= '9') {
                     result.error.type = Wave_CompilationErrorType_UnexpectedCharacter;
                     return result;
                 }
@@ -1136,14 +1151,32 @@ struct Wave_Lexer_TokenizeNumberResult Wave_Lexer_tokenize_number(
     src = number.format == Wave_NumericFormat_Dec ? source + offset : source + offset + 2;
     printf("(%zu, %u)\n", result.n, number.suffix_length);
     printf("`%.*s`\n", (int)result.n - number.suffix_length - prefix_length, src);
-    Wave_Numeric_string_to_number(&number, src, result.n - number.suffix_length - prefix_length, &result.error.type);
+    if (!Wave_Numeric_string_to_number(&number, src, result.n - number.suffix_length - prefix_length, &result.error.type)) {
+        result.error.type = Wave_CompilationErrorType_InvalidAllocation;
+        return result;
+    }
 
     //printf("test: %d\n", t);
 
     //printf("%llu\n", (unsigned long long)number.data.u64);
     //printf("%.3lf\n", number.data.f64);
 
-    Wave_Debug_numeric_dump(number);
+    //Wave_Debug_numeric_dump(number);
 
     return result;
+}
+
+void Wave_Lexer_clean_token_esc(struct Wave_Lexer_TokenizeEscResult *const token_result) {
+    Wave_String_delete(&token_result->data.output);
+    Wave_String_delete(&token_result->data.sequence);
+}
+
+void Wave_Lexer_clean_token_string(struct Wave_Lexer_TokenizeStringResult *const token_result) {
+    Wave_String_delete(&token_result->string_data);
+}
+
+void Wave_Lexer_clean_token_symbol(struct Wave_Lexer_TokenizeSymbolResult *const token_result) {
+    if (!(token_result->flags & WAVE_LEXER_TOKENIZE_SYMBOL_RESULT_KEYWORD)) {
+        Wave_String_delete(&token_result->data.identifier.id);
+    }
 }

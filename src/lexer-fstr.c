@@ -1,4 +1,5 @@
 #include "wave/def.h"
+#include "wave/token-fstr.h"
 #include <string.h>
 #include <wave/lexer-fstr.h>
 
@@ -10,7 +11,7 @@ struct Wave_Lexer_TokenizeFstrResult Wave_Lexer_tokenize_fstr(
     const struct Wave_TokenCounters *const token_counters
 ) {
     if (delimiter_predicate != NULL)
-        delimiter_predicate(coords, token_counters, NULL, 0);
+        delimiter_predicate(coords, token_counters, NULL, 0, NULL);
     struct Wave_Lexer_TokenizeFstrResult result = {
         .error = Wave_CompilationError_none,
         .n = 0,
@@ -18,12 +19,14 @@ struct Wave_Lexer_TokenizeFstrResult Wave_Lexer_tokenize_fstr(
     };
 
     const char *src = source + offset;
-    const char bounds = src[1];
+    const struct Wave_CharLocation_AdvanceResult first_ch_result = Wave_CharLocation_advance(coords, src);
+    if (first_ch_result.error.type != Wave_CompilationErrorType_None) {
+        result.error = first_ch_result.error;
+        return result;
+    }
+    const struct Wave_Unicode_CharUtf8 first_ch = first_ch_result.ch;
 
-    coords->index++;
-    coords->column++;
-
-    if (src[0] != '$') {
+    if (first_ch.bytes[0] != '$') {
         result.error.type = Wave_CompilationErrorType_UnexpectedCharacter;
         result.error.info_type = Wave_CompilationErrorInfoType_ExpectedSequence;
         strcpy(result.error.info.expected_sequence, "$");
@@ -31,29 +34,37 @@ struct Wave_Lexer_TokenizeFstrResult Wave_Lexer_tokenize_fstr(
     }
 
     result.n++;
-    coords->index++;
-    coords->column++;
 
-    if (bounds != '"' && bounds != '\'') {
+    src = source + offset + result.n;
+    const struct Wave_CharLocation_AdvanceResult bounds_result = Wave_CharLocation_advance(coords, src);
+    if (bounds_result.error.type != Wave_CompilationErrorType_None) {
+        result.error = bounds_result.error;
+        return result;
+    }
+    const struct Wave_Unicode_CharUtf8 bounds = bounds_result.ch;
+
+    if (bounds.bytes[0] != '"' && bounds.bytes[0] != '\'') {
         result.error.type = Wave_CompilationErrorType_InvalidStringBoundary;
         return result;
     }
 
     result.n++;
 
-    struct Wave_String s = Wave_String_new(16);
-    uint8_t flags = 0;
-    const uint8_t escape_mode   = 1 << 0; // mk: should i use a macro or should i trust the compiler optimizing these away?
-    const uint8_t escape_seq    = 1 << 1;
+    struct Wave_String s = Wave_String_view_new(src + result.n, 0);
 
     while (true) {
         src = source + offset + result.n;
-        char ch = *src;
-        coords->index++;
-        coords->column++;
+        
+        const struct Wave_CharLocation_AdvanceResult ch_result = Wave_CharLocation_advance(coords, src);
+        if (ch_result.error.type != Wave_CompilationErrorType_None) {
+            result.error = ch_result.error;
+            return result;
+        }
+        const struct Wave_Unicode_CharUtf8 ch = ch_result.ch;
+        const uint8_t ch_first = ch.bytes[0];
 
         if (delimiter_predicate != NULL) {
-            if (delimiter_predicate(coords, NULL, source, coords->index)) {
+            if (delimiter_predicate(coords, NULL, source, coords->index, NULL)) {
                 result.error.type = Wave_CompilationErrorType_UnexpectedBoundary;
                 Wave_String_delete(&s);
                 result.flags |= WAVE_LEXER_TOKENIZE_RESULT_INTERRUPTED_BY_PREDICATE;
@@ -61,61 +72,75 @@ struct Wave_Lexer_TokenizeFstrResult Wave_Lexer_tokenize_fstr(
             }
         }
 
-        if (ch == '\0') {
+        if (ch_first == '\0') {
             result.error.type = Wave_CompilationErrorType_UnexpectedEndOfFile;
-            result.error.info.expected_sequence[0] = bounds;
+            result.error.info.expected_sequence[0] = (char)bounds.bytes[0];
             result.error.info.expected_sequence[1] = '\0';
             result.error.info_type = Wave_CompilationErrorInfoType_ExpectedSequence;
             Wave_String_delete(&s);
             return result;
         }
 
-        if (flags & escape_mode) {
-
-            switch (ch) {
-                case 'a': ch = '\a'; break;
-                case 'b': ch = '\b'; break;
-                case 'f': ch = '\f'; break;
-                case 'n': ch = '\n'; break;
-                case 'r': ch = '\r'; break;
-                case 't': ch = '\t'; break;
-                case 'v': ch = '\v'; break;
-                default:             break;
+        if (ch_first == '\\') {
+            struct Wave_Lexer_TokenizeEscResult token_result = Wave_Lexer_tokenize_esc(coords, source, offset + result.n, delimiter_predicate);
+            if (token_result.error.type != Wave_CompilationErrorType_None) {
+                result.error = token_result.error;
+                Wave_String_delete(&s);
+                return result;
             }
-
-            flags ^= escape_mode;
-            flags |= escape_seq;
-
-            coords->index++;
-        }
-
-        if (ch == '\\' && !(flags & escape_seq)) {
-            flags |= escape_mode;
-            result.n++;
+            if (token_result.flags & WAVE_LEXER_TOKENIZE_RESULT_INTERRUPTED_BY_PREDICATE) {
+                result.flags |= WAVE_LEXER_TOKENIZE_RESULT_INTERRUPTED_BY_PREDICATE;
+                result.error.type = Wave_CompilationErrorType_UnexpectedBoundary;
+                Wave_String_delete(&s);
+                return result;
+            }
+            if (Wave_String_is_view(s) && !Wave_String_view_to_owned(&s)) {
+                result.error.type = Wave_CompilationErrorType_InvalidAllocation;
+                Wave_String_delete(&s);
+                return result;
+            }
+            if (!Wave_String_append(&s, token_result.data.output.data.str)) {
+                result.error.type = Wave_CompilationErrorType_InvalidAllocation;
+                Wave_String_delete(&s);
+                return result;
+            }
+            result.n += token_result.n;
+            Wave_Lexer_clean_token_esc(&token_result);
+            // mk: remove the `"` or `'` already added before which is one utf-8 char and one byte
+            //result.n--; // mk: but not here, becase unlike the charlocation, `result.n` is updated after, but it hits `continue` before
+            coords->column--;
+            coords->utf8_column--;
             continue;
-        } else if (ch == bounds) {
+        } else if (*src == bounds.bytes[0]) {
             result.n++;
             break;
-        } else if (ch == '\n') {
-            coords->column = 0;
-            coords->row++;
-        } else if (ch == '\r') {
-            coords->column = 0;
-            continue;
-        } else if (ch == '{') {
-            
+        } else if (*src == '{') {
+            if (delimiter_predicate != NULL) {
+                if (delimiter_predicate(coords, NULL, source, coords->index + 1, NULL)) {
+                    result.error.type = Wave_CompilationErrorType_UnexpectedBoundary;
+                    Wave_String_delete(&s);
+                    result.flags |= WAVE_LEXER_TOKENIZE_RESULT_INTERRUPTED_BY_PREDICATE;
+                    return result;
+                }
+            }
+
+            if (src[1] != '{') {
+                Wave_Lexer_tokenize(coords, source, coords->index, Wave_Fstr_expr_delimeter_predicate);
+            }
         }
 
-        if (!Wave_String_push(&s, ch)) {
+        if (Wave_String_is_view(s)) {
+            Wave_String_view_expand_utf8(&s, 1);
+        } else if (!Wave_String_push_utf8(&s, ch)) {
             result.error.type = Wave_CompilationErrorType_InvalidAllocation;
             Wave_String_delete(&s);
             return result;
         }
 
-        if (flags & escape_seq)
-            flags ^= escape_seq;
+        /*if (flags & escape_seq)
+            flags ^= escape_seq;*/
 
-        result.n++;
+        result.n += ch_result.n;
     }
 
     //result.string_data = s;

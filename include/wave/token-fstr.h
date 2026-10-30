@@ -49,7 +49,14 @@ struct Wave_TokenFstr {
 
 // mk: the following function runs when 
 // mk: this function should trigger whenever it hits a `}` or even `:` (used for formatting)
-bool Wave_Fstr_expr_delimeter_predicate(const Wave_Lexer_DelimiterPredicate user_delimiter_predicate);
+//bool Wave_Fstr_expr_delimeter_predicate(const Wave_Lexer_DelimiterPredicate user_delimiter_predicate);
+bool Wave_Fstr_expr_delimeter_predicate(
+    const struct Wave_CharLocation *const coords,
+    const struct Wave_TokenCounters *const token_counters,
+    const char *const source,
+    const size_t n,
+    const struct Wave_Lexer_EncapsulatedDelimiterPredicate *const chain
+);
 
 struct Wave_TokenFstr_EscOrExprVector Wave_TokenString_EscOrExprVector_new(const size_t capacity);
 bool Wave_TokenFstr_EscOrExprVector_push(struct Wave_TokenFstr_EscOrExprVector *const vector, const struct Wave_TokenFstr_Element token);
