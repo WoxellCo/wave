@@ -4,10 +4,14 @@
 #include <stdint.h>
 #include <wave.h>
 
-void Wave_Debug_string_dump(const struct Wave_String s);
+void Wave_Debug_dump_char_loc(const struct Wave_CharLocation loc);
+void Wave_Debug_dump_token(const struct Wave_Token t);
+void Wave_Debug_dump_token_list(const struct Wave_TokenVector vec);
+
+void Wave_Debug_dump_string(const struct Wave_String s);
 void Wave_Debug_tokens_dump(const struct Wave_TokenVector v);
-void Wave_Debug_numeric_dump(const struct Wave_Numeric n);
-void Wave_Debug_bitset32_dump(const uint32_t value);
+void Wave_Debug_dump_numeric(const struct Wave_Numeric n);
+void Wave_Debug_dump_bitset32(const uint32_t value);
 
 void Wave_Debug_print_string(const struct Wave_String s);
 void Wave_Debug_println_string(const struct Wave_String s);

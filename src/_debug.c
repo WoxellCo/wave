@@ -1,5 +1,8 @@
+#include "wave/char-location.h"
 #include "wave/def.h"
 #include "wave/lexer.h"
+#include "wave/token.h"
+#include <stddef.h>
 #include <stdint.h>
 #include <wave/_debug.h>
 #include <stdio.h>
@@ -12,7 +15,33 @@
     printf("\terror.type: %u\n", token_result->error.type); \
     printf("\terror.data: ");
 
-void Wave_Debug_string_dump(const struct Wave_String s) {
+void Wave_Debug_dump_char_loc(const struct Wave_CharLocation loc) {
+    printf("char location: {\n    row: %zu\n    col: %zu\n}\n", loc.row + 1, loc.utf8_column + 1);
+}
+
+void Wave_Debug_dump_token(const struct Wave_Token t) {
+    printf("=========================================================\n");
+    printf("token_type: %u\n", t.type);
+    Wave_Debug_dump_char_loc(t.location);
+    printf("token_length: %zu\n", t.length);
+
+    if (t.type == Wave_TokenType_LIT_STR) {
+        Wave_Debug_dump_string(t.data.str);
+    } else if (t.type == Wave_TokenType_LIT_NUM) {
+        Wave_Debug_dump_numeric(t.data.num);
+    } else {
+        printf("<? ? ?>\n");
+    }
+}
+
+void Wave_Debug_dump_token_list(const struct Wave_TokenVector vec) {
+    for (size_t i = 0; i < vec.size; i++) {
+        printf("TOKEN_LSIT[%zu]\n", i);
+        Wave_Debug_dump_token(vec.tokens[i]);
+    }
+}
+
+void Wave_Debug_dump_string(const struct Wave_String s) {
     printf("WAVE STRING DEBUG (length: %zu, size: %zu)\n", s.length, s.capacity);
     printf("---[\"\"\"%.*s\"\"\"]---", (int)s.length, s.data.str);
     printf("WAVE STRING DEBUG END\n\n");
@@ -20,7 +49,7 @@ void Wave_Debug_string_dump(const struct Wave_String s) {
 
 
 
-void Wave_Debug_numeric_dump(const struct Wave_Numeric n) {
+void Wave_Debug_dump_numeric(const struct Wave_Numeric n) {
     //struct Wave_String format = Wave_String_from("NUMBER DEBUG: ");
     printf("NUMERIC DEBUG: \n");
 
@@ -85,7 +114,7 @@ void Wave_Debug_numeric_dump(const struct Wave_Numeric n) {
 }
 
 
-void Wave_Debug_bitset32_dump(const uint32_t value) {
+void Wave_Debug_dump_bitset32(const uint32_t value) {
     printf("WAVE BITSET32 DEBUG: \n");
     printf("\tvalue: %u\n", value);
     printf("\t");
@@ -136,7 +165,7 @@ void Wave_Debug_tokenize_number_result(const struct Wave_Lexer_TokenizeNumberRes
 
     WAVE_DEBUG_TOKENIZE_RESULT_META
 
-    Wave_Debug_numeric_dump(token_result->number);
+    Wave_Debug_dump_numeric(token_result->number);
 
     printf(WAVE_DEBUG_END_TEMPLATE, "TOKENIZE NUMBER RESULT");
 }
@@ -146,7 +175,7 @@ void Wave_Debug_tokenize_string_result(const struct Wave_Lexer_TokenizeStringRes
 
     WAVE_DEBUG_TOKENIZE_RESULT_META
 
-    Wave_Debug_string_dump(token_result->string_data);
+    Wave_Debug_dump_string(token_result->string_data);
 
     printf(WAVE_DEBUG_END_TEMPLATE, "TOKENIZE STRING RESULT");
 }

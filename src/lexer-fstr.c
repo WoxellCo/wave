@@ -1,3 +1,4 @@
+#include "wave/char-location.h"
 #include <string.h>
 #include <wave/lexer-fstr.h>
 
@@ -134,6 +135,17 @@ struct Wave_Lexer_TokenizeFstrResult Wave_Lexer_tokenize_fstr(
                     extended_predicates = Wave_Lexer_dp_new_vector_with_concatenation(delimiter_predicates, Wave_Lexer_dp_array(Wave_Fstr_expr_delimeter_predicate));
                 }
                 Wave_Lexer_tokenize(coords, source, coords->index, extended_predicates);
+            } else {
+                if (Wave_String_is_view(s)) {
+                    Wave_String_view_expand_utf8(&s, 1);
+                } else if (!Wave_String_push(&s, '{')) {
+                    result.error.type = Wave_CompilationErrorType_InvalidAllocation;
+                    Wave_String_delete(&s);
+                    Wave_Lexer_dp_delete_vector(&extended_predicates);
+                    return result;
+                }
+                Wave_CharLocation_advance_by(coords, source, 1);
+                result.n++;
             }
         }
 

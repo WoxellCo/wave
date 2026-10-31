@@ -27,8 +27,11 @@ enum Wave_TokenType {
     Wave_TokenType_LTE,         // `<=`
     Wave_TokenType_ARROW,       // `->`
     Wave_TokenType_FARROW,      // `=>`
+    Wave_TokenType_SPACESHIP,   // `<=>`
+    Wave_TokenType_AWA,         // `>~<`
     Wave_TokenType_LIT_INT,     // int literal
     Wave_TokenType_LIT_FLOAT,   // float literal
+    Wave_TokenType_LIT_NUM,     // number literal
     Wave_TokenType_LIT_STR,     // string literal
     Wave_TokenType_BOOL_TRUE,   // bool literal `true`
     Wave_TokenType_BOOL_FALSE,  // bool literal `false`
@@ -128,6 +131,7 @@ enum Wave_TokenType {
     Wave_TokenType_DIV,         // `/`
     Wave_TokenType_ADD,         // `+`
     Wave_TokenType_MIN,         // `-`
+    Wave_TokenType_MODULO,      // `%`
     Wave_TokenType_LSHIFT,      // `<<`
     Wave_TokenType_RSHIFT,      // `>>`
     Wave_TokenType_ASS_ADD,     // `+=`
@@ -142,6 +146,7 @@ enum Wave_TokenType {
     Wave_TokenType_ASS_NOT,     // `~=`
     Wave_TokenType_ASS_DOUBLE_AND,// `&&=`
     Wave_TokenType_ASS_DOUBLE_OR,// `||=`
+    Wave_TokenType_ASS_MODULO,  // `%`
     Wave_TokenType_LPAREN,      // `(`
     Wave_TokenType_RPAREN,      // `)`
     Wave_TokenType_LBRACK,      // `[`
@@ -149,10 +154,11 @@ enum Wave_TokenType {
     Wave_TokenType_LBRACE,      // `{`
     Wave_TokenType_RBRACE,      // `}`
     Wave_TokenType_RANGE,       // `..` or `..=` <- just this | complete exmples: `0..9` or `0..=9` or `..=9` or `x..y` or `..` ...
-    Wave_TokenType_FSTR,        // `$"hello {world}!"`
+    Wave_TokenType_LIT_FSTR,    // `$"hello {world}!"`
     Wave_TokenType_NEW,         // `new`
     Wave_TokenType_DELETE,      // `delete`
     Wave_TokenType_AS,          // `as`
+    Wave_TokenType_PIPE,        // `|>`
 };
 
 struct Wave_TokenCounters {

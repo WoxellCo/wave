@@ -66,7 +66,8 @@ int main(void) {
 
     printf("STRLEN: %zu\n", strlen(buffer));
 
-    //Wave_Lexer_tokenize(&loc, buffer, 0, NULL);
+    const struct Wave_Lexer_TokenizeResult r = Wave_Lexer_tokenize(&loc, buffer, 0, NULL);
+    Wave_Debug_dump_token_list(r.token_vector);
 
     free(buffer);
 }

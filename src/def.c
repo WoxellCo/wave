@@ -86,7 +86,7 @@ bool Wave_Numeric_string_to_number(
     *error_out = Wave_CompilationErrorType_None;
     int base;
 
-    printf("NNNNNNNNNNNNNNN:::: %.*s\n", (int)length, s);
+    //printf("NNNNNNNNNNNNNNN:::: %.*s\n", (int)length, s);
 
     switch (number->format) {
         case Wave_NumericFormat_Dec:
