@@ -8,6 +8,8 @@
 #include <wave/numeric.h>
 #include <wave/unicode.h>
 
+#include <wave/int-target.h>
+
 struct Wave_TokenVector Wave_TokenVector_new(const size_t capacity) {
     struct Wave_TokenVector vector = (struct Wave_TokenVector){
         .tokens = NULL,

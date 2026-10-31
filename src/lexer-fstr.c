@@ -2,11 +2,17 @@
 #include <string.h>
 #include <wave/lexer-fstr.h>
 
+#include <wave/int-target.h>
+
 struct Wave_Lexer_TokenizeFstrResult Wave_Lexer_tokenize_fstr(
     struct Wave_CharLocation *const coords,
     const char *const source,
     const size_t offset,
+    #ifndef _MSC_VER
     const Wave_Lexer_DelimiterPredicate delimiter_predicates[const],
+    #else
+    const Wave_Lexer_DelimiterPredicate *const delimiter_predicates,
+    #endif
     const struct Wave_TokenCounters *const token_counters
 ) {
     struct Wave_Lexer_TokenizeFstrResult result = {
@@ -30,7 +36,7 @@ struct Wave_Lexer_TokenizeFstrResult Wave_Lexer_tokenize_fstr(
     if (first_ch.bytes[0] != '$') {
         result.error.type = Wave_CompilationErrorType_UnexpectedCharacter;
         result.error.info_type = Wave_CompilationErrorInfoType_ExpectedSequence;
-        strcpy(result.error.info.expected_sequence, "$");
+        strncpy(result.error.info.expected_sequence, "$", 1);
         return result;
     }
 

@@ -14,7 +14,11 @@ struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
     struct Wave_CharLocation *const coords,
     const char *const source,
     const size_t offset,
+    #ifndef _MSC_VER
     const Wave_Lexer_DelimiterPredicate delimiter_predicates[const]
+    #else
+    const Wave_Lexer_DelimiterPredicate *const delimiter_predicates
+    #endif
 ) {
     struct Wave_Lexer_TokenizeResult result = {
         .error = {
@@ -254,7 +258,11 @@ struct Wave_Lexer_TokenizeStringResult Wave_Lexer_tokenize_string(
     struct Wave_CharLocation *const coords,
     const char *const source,
     const size_t offset,
+    #ifndef _MSC_VER
     const Wave_Lexer_DelimiterPredicate delimiter_predicates[const]
+    #else
+    const Wave_Lexer_DelimiterPredicate *const delimiter_predicates
+    #endif
 ) {
     typedef struct Wave_String String;
 
@@ -406,7 +414,11 @@ struct Wave_Lexer_TokenizeEscResult Wave_Lexer_tokenize_esc(
     struct Wave_CharLocation *const coords,
     const char *const source,
     const size_t offset,
+    #ifndef _MSC_VER
     const Wave_Lexer_DelimiterPredicate delimiter_predicates[const]
+    #else
+    const Wave_Lexer_DelimiterPredicate *const delimiter_predicates
+    #endif
 ) {
     struct Wave_Lexer_TokenizeEscResult result = {
         .error = Wave_CompilationError_none,
@@ -658,7 +670,11 @@ struct Wave_Lexer_TokenizeSymbolResult Wave_Lexer_tokenize_symbol(
     struct Wave_CharLocation *const coords,
     const char *const source,
     const size_t offset,
+    #ifndef _MSC_VER
     const Wave_Lexer_DelimiterPredicate delimiter_predicates[const]
+    #else
+    const Wave_Lexer_DelimiterPredicate *const delimiter_predicates
+    #endif
 ) {
     struct Wave_Lexer_TokenizeSymbolResult result = {
         .error = {
@@ -841,7 +857,11 @@ struct Wave_Lexer_TokenizeOperatorResult Wave_Lexer_tokenize_operator(
     struct Wave_CharLocation *const coords,
     const char *const source,
     const size_t offset,
+    #ifndef _MSC_VER
     const Wave_Lexer_DelimiterPredicate delimiter_predicates[const]
+    #else
+    const Wave_Lexer_DelimiterPredicate *const delimiter_predicates
+    #endif
 ) {
     struct Wave_Lexer_TokenizeOperatorResult result = {
         .error = Wave_CompilationError_none,
@@ -1031,7 +1051,11 @@ struct Wave_Lexer_TokenizeNumberResult Wave_Lexer_tokenize_number(
     struct Wave_CharLocation *const coords,
     const char *const source,
     const size_t offset,
+    #ifndef _MSC_VER
     const Wave_Lexer_DelimiterPredicate delimiter_predicates[const],
+    #else
+    const Wave_Lexer_DelimiterPredicate *const delimiter_predicates,
+    #endif
     const struct Wave_TokenCounters *const token_counters
 ) {
     struct Wave_Lexer_TokenizeNumberResult result = {
@@ -1275,7 +1299,11 @@ struct Wave_Lexer_TokenizeNumberResult Wave_Lexer_tokenize_number(
 
 bool Wave_Lexer_execute_delimiter_predicates(
     const struct Wave_Lexer_DelimiterPredicateParams params,
+    #ifndef _MSC_VER
     const Wave_Lexer_DelimiterPredicate delimiter_predicates[const]
+    #else
+    const Wave_Lexer_DelimiterPredicate *const delimiter_predicates
+    #endif
 ) {
     if (delimiter_predicates == NULL)
         return false;
@@ -1290,8 +1318,13 @@ bool Wave_Lexer_execute_delimiter_predicates(
 }
 
 Wave_Lexer_DelimiterPredicate *Wave_Lexer_dp_new_vector_with_concatenation(
+    #ifndef _MSC_VER
     const Wave_Lexer_DelimiterPredicate l1[const],
     const Wave_Lexer_DelimiterPredicate l2[const]
+    #else
+    const Wave_Lexer_DelimiterPredicate *const l1,
+    const Wave_Lexer_DelimiterPredicate *const l2
+    #endif
 ) {
     size_t lengths[2] = {0};
 

@@ -79,7 +79,7 @@ void Wave_Debug_dump_numeric(const struct Wave_Numeric n) {
                 break;
             default:
             case 64:
-                #if UINT64_MAX == ULLONG_MAX
+                #if UINT64_MAX == ULLONG_MAX || defined (_MSC_VER)
                 printf("%llu", n.data.u64);
                 #else
                 printf("%lu", n.data.u64);
@@ -99,7 +99,7 @@ void Wave_Debug_dump_numeric(const struct Wave_Numeric n) {
                 break;
             default:
             case 64:
-                #if INT64_MAX == LLONG_MAX
+                #if INT64_MAX == LLONG_MAX || defined (_MSC_VER)
                 printf("%lld", n.data.i64);
                 #else
                 printf("%ld", n.data.i64);

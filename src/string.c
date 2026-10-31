@@ -1,10 +1,13 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <wave/string.h>
 #include <stdlib.h>
 #include <string.h>
 #include <wave/unicode.h>
+
+#include <wave/int-target.h>
 
 struct Wave_String Wave_String_new(const size_t capacity) {
     struct Wave_String s = (struct Wave_String){
@@ -60,7 +63,7 @@ struct Wave_String Wave_String_from(const char *const str) {
 }
 
 void Wave_String_delete(struct Wave_String *const s) {
-    if (!Wave_String_is_view(*s))
+    if (!Wave_String_is_view(*s) && !Wave_String_is_null(*s))
         free(s->data.mut_str);
     *s = Wave_String_null;
 }
@@ -156,7 +159,7 @@ bool Wave_String_append(struct Wave_String *const s, const char *const str) {
         if (!Wave_String_reserve(s, s->length + str_len + 1))
             return false;
 
-    strcpy(s->data.mut_str + s->length, str);
+    strncpy(s->data.mut_str + s->length, str, s->length + str_len);
     s->length += str_len;
     s->data.mut_str[s->length] = '\0';
 

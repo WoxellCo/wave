@@ -1,12 +1,11 @@
 #ifndef WAVE_LEXER_H
 #define WAVE_LEXER_H
 
-#include "wave/string.h"
-#include "wave/token-string.h"
 #include <stddef.h>
 #include <stdint.h>
 #include <wave/def.h>
 #include <wave/token.h>
+#include <wave/token-string.h>
 
 #define WAVE_LEXER_TOKENIZE_RESULT_INTERRUPTED_BY_PREDICATE     (1 << 0)
 
@@ -40,8 +39,13 @@ typedef bool(*Wave_Lexer_DelimiterPredicate)(
 #define Wave_Lexer_dp_check_derived(loc_, counters_, src_, n_) Wave_Lexer_dp_check(Wave_Lexer_dp_params((loc_), (counters_), (src_), (n_)), delimiter_predicates)
 
 Wave_Lexer_DelimiterPredicate *Wave_Lexer_dp_new_vector_with_concatenation(
+    #ifndef _MSC_VER // mk: i'm forced to so this because msvc isn't that great
     const Wave_Lexer_DelimiterPredicate l1[const],
     const Wave_Lexer_DelimiterPredicate l2[const]
+    #else
+    const Wave_Lexer_DelimiterPredicate *const l1,
+    const Wave_Lexer_DelimiterPredicate *const l2
+    #endif
 );
 
 void Wave_Lexer_dp_delete_vector(Wave_Lexer_DelimiterPredicate **const vector);
@@ -49,14 +53,22 @@ void Wave_Lexer_dp_delete_vector(Wave_Lexer_DelimiterPredicate **const vector);
 // mk: null-terminated array of delimiter predicates
 bool Wave_Lexer_execute_delimiter_predicates(
     const struct Wave_Lexer_DelimiterPredicateParams params,
+    #ifndef _MSC_VER
     const Wave_Lexer_DelimiterPredicate delimiter_predicates[const]
+    #else
+    const Wave_Lexer_DelimiterPredicate *const delimiter_predicates
+    #endif
 );
 
 struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
     struct Wave_CharLocation *const coords,                         // mk: initial coords, it mutates during the execution
     const char *const source,                                       // mk: source code to tokenize
     const size_t offset,                                            // mk: offset, if the code begins at character 12 and offset is 2, the tokenizer starta at characters 14
+    #ifndef _MSC_VER
     const Wave_Lexer_DelimiterPredicate delimiter_predicates[const] // mk: the predicate controls if the token should keep consuming the characters or not (returns a true if it should stop), it can be `NULL` meaning there will be no checks and the tokenizer will consume until EOF
+    #else
+    const Wave_Lexer_DelimiterPredicate *const delimiter_predicates
+    #endif
 );
 
 struct Wave_Lexer_TokenizeStringResult {
@@ -70,7 +82,11 @@ struct Wave_Lexer_TokenizeStringResult Wave_Lexer_tokenize_string(
     struct Wave_CharLocation *const coords,
     const char *const source,
     const size_t offset,
+    #ifndef _MSC_VER
     const Wave_Lexer_DelimiterPredicate delimiter_predicates[const]
+    #else
+    const Wave_Lexer_DelimiterPredicate *const delimiter_predicates
+    #endif
 );
 
 struct Wave_Lexer_TokenizeSymbolResult {
@@ -87,7 +103,11 @@ struct Wave_Lexer_TokenizeSymbolResult Wave_Lexer_tokenize_symbol(
     struct Wave_CharLocation *const coords,
     const char *const source,
     const size_t offset,
+    #ifndef _MSC_VER
     const Wave_Lexer_DelimiterPredicate delimiter_predicates[const]
+    #else
+    const Wave_Lexer_DelimiterPredicate *const delimiter_predicates
+    #endif
 );
 
 struct Wave_Lexer_TokenizeOperatorResult {
@@ -101,7 +121,11 @@ struct Wave_Lexer_TokenizeOperatorResult Wave_Lexer_tokenize_operator(
     struct Wave_CharLocation *const coords,
     const char *const source,
     const size_t offset,
+    #ifndef _MSC_VER
     const Wave_Lexer_DelimiterPredicate delimiter_predicates[const] // mk: important: i should add the counters so the predicate can evaluate better
+    #else
+    const Wave_Lexer_DelimiterPredicate *const delimiter_predicates
+    #endif
 );
 
 struct Wave_Lexer_TokenizeNumberResult {
@@ -115,7 +139,11 @@ struct Wave_Lexer_TokenizeNumberResult Wave_Lexer_tokenize_number(
     struct Wave_CharLocation *const coords,
     const char *const source,
     const size_t offset,
+    #ifndef _MSC_VER
     const Wave_Lexer_DelimiterPredicate delimiter_predicates[const],
+    #else
+    const Wave_Lexer_DelimiterPredicate *const delimiter_predicates,
+    #endif
     const struct Wave_TokenCounters *const token_counters
 );
 
@@ -130,7 +158,11 @@ struct Wave_Lexer_TokenizeEscResult Wave_Lexer_tokenize_esc(
     struct Wave_CharLocation *const coords,
     const char *const source,
     const size_t offset,
+    #ifndef _MSC_VER
     const Wave_Lexer_DelimiterPredicate delimiter_predicates[const]
+    #else
+    const Wave_Lexer_DelimiterPredicate *const delimiter_predicates
+    #endif
 );
 
 // mk: easy clean up result token helper functions, they completely free heap allocated memory
