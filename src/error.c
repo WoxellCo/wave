@@ -38,6 +38,16 @@ struct Wave_String Wave_Error_compilation_error_to_string(
                 err->info.expected_sequence
             );
             break;
+        case Wave_CompilationErrorType_UnexpectedCharacter:
+            snprintf(buffer, 128, "%s:%zu:%zu: error: unexpected character",
+                coords->path,
+                coords->row + 1,
+                coords->column + 1
+                //10,
+                //source + coords->index,
+                //err->info.expected_sequence
+            );
+            break;
         case Wave_CompilationErrorType_None:
             return Wave_String_null;
         default:

@@ -41,7 +41,7 @@ struct Wave_Unicode_CharUtf8 Wave_Unicode_CharUtf8_get_at(const uint32_t value) 
         ch.bytes[length - i - 1] = 128u | ((value >> (6 * i)) & 63u);
     }
 
-    ch.bytes[0] |= (uint8_t)(value >> (6 * (length - 1))) & wildcard;
+    ch.bytes[0] |= (uint8_t)((value >> (6u * (length - 1u))) & wildcard);
 
     return ch;
 }

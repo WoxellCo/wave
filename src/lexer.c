@@ -58,16 +58,17 @@ struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
             .location = *coords,
             .length = 1,
             .data = {0},
+            .category = Wave_TokenCat_None
         };
 
         Wave_Lexer_dp_check(Wave_Lexer_dp_params(coords, &token_counters, source, offset + result.n), delimiter_predicates) {
             result.flags |= WAVE_LEXER_TOKENIZE_RESULT_INTERRUPTED_BY_PREDICATE;
-            return result;
+            break;
         }
 
         if (ch_len != 1) { // mk: non-ascii utf-8 characters don't make any sense in the actual code
-            result.error.type = Wave_CompilationErrorType_UnexpectedCharacter;
-            return result;
+            compilation_error.type = Wave_CompilationErrorType_UnexpectedCharacter;
+            break;
         }
 
         if (ch == ' ' || ch == '\t') {
@@ -124,7 +125,8 @@ struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
                     .type = symbol_token_result.data.keyword,
                     .location = token.location,
                     .length = symbol_token_result.n,
-                    .data = {0}
+                    .data = {0},
+                    .category = Wave_TokenCat_Keyword
                 };
             } else {
                 token = (struct Wave_Token){
@@ -142,8 +144,27 @@ struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
             coords->utf8_column--;
         } else if (ch == '.') {
             // mk: this can be either a member access, spread operator, a range or a floating number
+            size_t delta = 0;
+            token.type = Wave_TokenType_DOT;
+            Wave_Lexer_dp_check_derived(coords, &token_counters, source, offset + result.n + 1) {
+                if (source[offset + result.n + 1] == '.') {
+                    token.type = Wave_TokenType_RANGE;
+                    delta++;
+                    Wave_Lexer_dp_check_derived(coords, &token_counters, source, offset + result.n + 2) {
+                        if (source[offset + result.n + 2] == '.') {
+                            token.type = Wave_TokenType_ELLIPSIS;
+                            delta++;
+                        } else if (source[offset + result.n + 2] == '=') {
+                            token.type = Wave_TokenType_RANGEI;
+                            delta++;
+                        }
+                    }
+                }
+            }
+            Wave_CharLocation_advance_by(coords, source + offset + result.n, delta);
+            result.n += delta;
         } else if (ch >= '0' && ch <= '9') {
-            printf("pass: `%s`\n\n", src);
+            //printf("pass: `%s`\n\n", src);
             // mk: the number tokenizer should also handle hex (0x), bin (0b), oct (0o), scientific not (1.2e-4) formats
             const struct Wave_Lexer_TokenizeNumberResult number_token_result = Wave_Lexer_tokenize_number(coords, source, result.n, delimiter_predicates, &token_counters);
 
@@ -185,7 +206,8 @@ struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
                 .type = operator_token_result.operator,
                 .location = token.location,
                 .length = operator_token_result.n,
-                .data.none = 0
+                .data.none = 0,
+                .category = Wave_TokenCat_Operator
             };
 
             result.n += operator_token_result.n - 1;
@@ -201,22 +223,30 @@ struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
             
         } else if (ch == '(') {
             token.type = Wave_TokenType_LPAREN;
+            token_counters.lparen++;
         } else if (ch == ')') {
             token.type = Wave_TokenType_RPAREN;
+            token_counters.rparen++;
         } else if (ch == '[') {
             token.type = Wave_TokenType_LBRACK;
+            token_counters.lbrack++;
         } else if (ch == ']') {
             token.type = Wave_TokenType_RBRACK;
+            token_counters.rbrack++;
         } else if (ch == '{') {
             token.type = Wave_TokenType_LBRACE;
+            token_counters.lbrace++;
         } else if (ch == '}') {
             token.type = Wave_TokenType_RBRACE;
+            token_counters.rbrace++;
         } else if (ch == ';') {
             token.type = Wave_TokenType_SEMICOLON;
         } else if (ch == ',') {
             token.type = Wave_TokenType_COMMA;
         } else if (ch == ':') {
             // mk: colon or `::`
+            token.type = Wave_TokenType_COLON;
+            
         } else if (ch == '$') {
             // mk: fstr `$"..."` or `$'...'`
             if (src[1] == '"' || src[1] == '\'') {
@@ -245,9 +275,11 @@ struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
         src = source + offset + result.n;
     }
 
+    result.error = compilation_error;
+
     if (compilation_error.type != Wave_CompilationErrorType_None) {
         struct Wave_String str = Wave_Error_compilation_error_to_string(coords, source, &compilation_error);
-        puts(str.data.mut_str);
+        puts(str.data.str);
         exit(1);
     }
 
@@ -817,7 +849,8 @@ struct Wave_Lexer_TokenizeSymbolResult Wave_Lexer_tokenize_symbol(
         result.n = keyword.len;
         //coords->index += keyword.len;
         //coords->column += keyword.len;
-        Wave_CharLocation_advance_by(coords, source + offset + result.n, keyword.len);
+        result.flags |= WAVE_LEXER_TOKENIZE_SYMBOL_RESULT_KEYWORD;
+        Wave_CharLocation_advance_by(coords, source + offset, keyword.len);
         return result;
     }
 
@@ -826,7 +859,6 @@ struct Wave_Lexer_TokenizeSymbolResult Wave_Lexer_tokenize_symbol(
         ch = *src;
         //coords->column++;
         //coords->index++;
-        Wave_CharLocation_advance_by(coords, src, 1);
 
         Wave_Lexer_dp_check_derived(coords, NULL, source, coords->index)
             break;
@@ -839,11 +871,12 @@ struct Wave_Lexer_TokenizeSymbolResult Wave_Lexer_tokenize_symbol(
             break;
         }
 
+        Wave_CharLocation_advance_by(coords, src, 1);
         result.n++;
     }
 
     //result.data.identifier.id = Wave_String_from_and_max_len(source, result.n);
-    result.data.identifier.id = Wave_String_view_new(source, result.n);
+    result.data.identifier.id = Wave_String_view_new(source + offset, result.n);
     Wave_Debug_dump_string(result.data.identifier.id);
 
     /*if (Wave_String_is_null(result.data.identifier.id)) {
@@ -893,14 +926,15 @@ struct Wave_Lexer_TokenizeOperatorResult Wave_Lexer_tokenize_operator(
         case '=': //                                                =
             result.operator = Wave_TokenType_ASS;
             if (max_chars >= 2) {
-                result.n = 2;
                 if (src[1] == '=') { //                             ==
+                    result.n = 2;
                     result.operator = Wave_TokenType_EQ;
                     if (src[2] == '=' && max_chars >= 3) { //       ===
                         result.n = 3;
                         result.operator = Wave_TokenType_SEQ;
                     }
                 } else if (src[1] == '>') { //                      =>
+                    result.n = 2;
                     result.operator = Wave_TokenType_FARROW;
                 }
             }
@@ -919,14 +953,15 @@ struct Wave_Lexer_TokenizeOperatorResult Wave_Lexer_tokenize_operator(
         case '<': //                                                <
             result.operator = Wave_TokenType_LT;
             if (max_chars >= 2) {
-                result.n = 2;
                 if (src[1] == '=') { //                             <=
+                    result.n = 2;
                     result.operator = Wave_TokenType_LTE;
                     if (src[3] == '=' && max_chars >= 3) { //       <=>
                         result.n = 3;
                         result.operator = Wave_TokenType_SPACESHIP;
                     }
                 } else if (src[2] == '<') { //                      <<
+                    result.n = 2;
                     result.operator = Wave_TokenType_LSHIFT;
                     if (src[3] == '=' && max_chars >= 3) { //       <<=
                         result.n = 3;
@@ -938,10 +973,11 @@ struct Wave_Lexer_TokenizeOperatorResult Wave_Lexer_tokenize_operator(
         case '>': //                                                >
             result.operator = Wave_TokenType_GT;
             if (max_chars >= 2) {
-                result.n = 2;
                 if (src[1] == '=') { //                             >=
+                    result.n = 2;
                     result.operator = Wave_TokenType_GTE;
                 } else if (src[2] == '>') { //                      >>
+                    result.n = 2;
                     result.operator = Wave_TokenType_RSHIFT;
                     if (src[3] == '=' && max_chars >= 3) { //       >>=
                         result.n = 3;
@@ -978,10 +1014,11 @@ struct Wave_Lexer_TokenizeOperatorResult Wave_Lexer_tokenize_operator(
         case '-': //                                                -
             result.operator = Wave_TokenType_MIN;
             if (max_chars >= 2) {
-                result.n = 2;
                 if (src[1] == '=') { //                             -=
+                    result.n = 2;
                     result.operator = Wave_TokenType_ASS_MIN;
                 } else if (src[1] == '>') { //                      ->
+                    result.n = 2;
                     result.operator = Wave_TokenType_ARROW;
                 }
             }
@@ -989,13 +1026,15 @@ struct Wave_Lexer_TokenizeOperatorResult Wave_Lexer_tokenize_operator(
         case '&': //                                                &
             result.operator = Wave_TokenType_AND;
             if (max_chars >= 2) {
-                result.n = 2;
                 if (src[1] == '&') { //                             &&
+                    result.n = 2;
                     result.operator = Wave_TokenType_DOUBLE_AND;
                     if (src[2] == '=' && max_chars >= 3) { //       &&=
+                        result.n = 3;
                         result.operator = Wave_TokenType_ASS_DOUBLE_AND;
                     }
                 } else if (src[1] == '=') { //                      &=
+                    result.n = 2;
                     result.operator = Wave_TokenType_ASS_AND;
                 }
             }
@@ -1003,15 +1042,18 @@ struct Wave_Lexer_TokenizeOperatorResult Wave_Lexer_tokenize_operator(
         case '|': //                                                |
             result.operator = Wave_TokenType_OR;
             if (max_chars >= 2) {
-                result.n = 2;
                 if (src[1] == '|') { //                             ||
+                    result.n = 2;
                     result.operator = Wave_TokenType_DOUBLE_OR;
                     if (src[2] == '=' && max_chars >= 3) { //       ||=
+                        result.n = 3;
                         result.operator = Wave_TokenType_ASS_DOUBLE_OR;
                     }
                 } else if (src[1] == '=') { //                      |=
+                    result.n = 2;
                     result.operator = Wave_TokenType_ASS_AND;
                 } else if (src[1] == '>') { //                      |>
+                    result.n = 2;
                     result.operator = Wave_TokenType_PIPE;
                 }
             }
@@ -1043,6 +1085,8 @@ struct Wave_Lexer_TokenizeOperatorResult Wave_Lexer_tokenize_operator(
             result.n = 0;
             break;
     }
+
+    Wave_CharLocation_advance_by(coords, src, result.n);
 
     return result;
 }

@@ -1,6 +1,7 @@
 #include <wave/_debug.h>
 #include <wave/_test.h>
 #include "wave/lexer.h"
+#include "wave/token.h"
 #include "wave/unicode.h"
 #include <locale.h>
 #include <stddef.h>
@@ -18,11 +19,13 @@ int main(void) {
             }
         }
     }
-    Wave_Test_number_literals();
+    //Wave_Test_number_literals();
 
-    Wave_Test_escape_sequences();
+    //Wave_Test_escape_sequences();
 
-    Wave_Test_string_literals();
+    //Wave_Test_string_literals();
+
+    Wave_Test_symbols();
 
     struct Wave_Unicode_CharUtf8 ch = Wave_Unicode_CharUtf8_get_at(0x10F223);
     //Wave_Debug_bitset32_dump(ch);
@@ -30,7 +33,6 @@ int main(void) {
     ch = Wave_Unicode_CharUtf8_assign("abc");
     printf("\'%.*s\'\n", Wave_Unicode_CharUtf8_get_length(ch), (char *)&ch);
     //Wave_Debug_bitset32_dump(ch);
-    puts("e");
 
     const unsigned char *p = (const unsigned char *)&ch;
     printf("%02X %02X %02X %02X\n", p[0], p[1], p[2], p[3]);
@@ -71,8 +73,10 @@ int main(void) {
 
     printf("STRLEN: %zu\n", strlen(buffer));
 
-    const struct Wave_Lexer_TokenizeResult r = Wave_Lexer_tokenize(&loc, buffer, 0, NULL);
+    struct Wave_Lexer_TokenizeResult r = Wave_Lexer_tokenize(&loc, buffer, 0, NULL);
     Wave_Debug_dump_token_list(r.token_vector);
 
     free(buffer);
+
+    Wave_TokenVector_delete(&r.token_vector);
 }

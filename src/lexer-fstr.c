@@ -36,7 +36,7 @@ struct Wave_Lexer_TokenizeFstrResult Wave_Lexer_tokenize_fstr(
     if (first_ch.bytes[0] != '$') {
         result.error.type = Wave_CompilationErrorType_UnexpectedCharacter;
         result.error.info_type = Wave_CompilationErrorInfoType_ExpectedSequence;
-        strncpy(result.error.info.expected_sequence, "$", 1);
+        strncpy(result.error.info.expected_sequence, "$", 2);
         return result;
     }
 

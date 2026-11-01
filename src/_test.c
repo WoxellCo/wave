@@ -1,4 +1,5 @@
 #include "wave/lexer.h"
+#include "wave/token.h"
 #include <stddef.h>
 #include <stdio.h>
 #include <wave/_test.h>
@@ -49,11 +50,49 @@ bool Wave_Test_string_literals(void) {
 
     struct Wave_CharLocation loc = Wave_Test_no_loc();
 
-    for (size_t i = 2; i < 4; i++) {
+    for (size_t i = 0; i < 4; i++) {
         printf(">> TEST NO %zu:\n", i + 1);
         struct Wave_Lexer_TokenizeStringResult r = Wave_Lexer_tokenize_string(&loc, t[i], 0, NULL);
         Wave_Debug_tokenize_string_result(&r);
         Wave_Lexer_clean_token_string(&r);
+    }
+
+    return true;
+}
+
+bool Wave_Test_symbols(void) {
+    const char *t[] = {"let", "const", "match", "matcha"};
+
+    struct Wave_CharLocation loc = Wave_Test_no_loc();
+
+    for (size_t i = 0; i < 4; i++) {
+        printf(">> TEST NO %zu:\n", i + 1);
+        struct Wave_Lexer_TokenizeSymbolResult r = Wave_Lexer_tokenize_symbol(&loc, t[i], 0, NULL);
+        struct Wave_Token token = {
+            .type = 0,
+            .location = loc,
+            .length = 1,
+            .data = {0},
+            .category = Wave_TokenCat_None
+        };
+        if (r.flags & WAVE_LEXER_TOKENIZE_SYMBOL_RESULT_KEYWORD) {
+            token = (struct Wave_Token){
+                .type = r.data.keyword,
+                .location = token.location,
+                .length = r.n,
+                .data = {0},
+                .category = Wave_TokenCat_Keyword
+            };
+        } else {
+            token = (struct Wave_Token){
+                .type = Wave_TokenType_ID,
+                .location = token.location,
+                .length = r.n,
+                .data.str = r.data.identifier.id
+            };
+        }
+        Wave_Debug_dump_token(token);
+        Wave_Token_delete(&token);
     }
 
     return true;

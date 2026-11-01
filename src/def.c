@@ -10,47 +10,6 @@
 
 #include <wave/int-target.h>
 
-struct Wave_TokenVector Wave_TokenVector_new(const size_t capacity) {
-    struct Wave_TokenVector vector = (struct Wave_TokenVector){
-        .tokens = NULL,
-        .size = 0,
-        .capacity = 0,
-    };
-
-    if (capacity == 0)
-        return vector;
-
-    vector.tokens = (struct Wave_Token *)malloc(capacity * sizeof(struct Wave_Token));
-    
-    if (vector.tokens != NULL)
-        vector.capacity = capacity;
-
-    return vector;
-}
-
-bool Wave_TokenVector_push(struct Wave_TokenVector *const vector, const struct Wave_Token token) {
-    if (vector->size >= vector->capacity) {
-        const size_t new_cap = vector->capacity * 2;
-        struct Wave_Token *const reallocated = (struct Wave_Token *)realloc(vector->tokens, new_cap * sizeof(struct Wave_Token));
-        if (reallocated == NULL)
-            return false;
-        vector->tokens = reallocated;
-        vector->capacity = new_cap;
-    }
-
-    vector->tokens[vector->size] = token;
-    vector->size++;
-
-    return true;
-}
-
-void Wave_TokenVector_delete(struct Wave_TokenVector *const vector) {
-    free(vector->tokens);
-    vector->tokens = NULL;
-    vector->size = 0;
-    vector->capacity = 0;
-}
-
 // mk: tried to not use the string conversion from the libc, but i'm too lazy to implement one myself
 /*bool Wave_string_to_u8(uint8_t *const value, const char *const s, const size_t length) {
     uint8_t temp = 0;

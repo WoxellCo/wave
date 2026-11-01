@@ -153,12 +153,20 @@ enum Wave_TokenType {
     Wave_TokenType_RBRACK,      // `]`
     Wave_TokenType_LBRACE,      // `{`
     Wave_TokenType_RBRACE,      // `}`
-    Wave_TokenType_RANGE,       // `..` or `..=` <- just this | complete exmples: `0..9` or `0..=9` or `..=9` or `x..y` or `..` ...
+    Wave_TokenType_RANGE,       // `..` <- just this | complete exmples: `0..9` or `x..y` or `..` ...
+    Wave_TokenType_RANGEI,      // `..=` <- just this | complete exmples: `0..=9` or `..=9` or `..=` ...
+    Wave_TokenType_ELLIPSIS,    // `...`
     Wave_TokenType_LIT_FSTR,    // `$"hello {world}!"`
     Wave_TokenType_NEW,         // `new`
     Wave_TokenType_DELETE,      // `delete`
     Wave_TokenType_AS,          // `as`
     Wave_TokenType_PIPE,        // `|>`
+};
+
+enum Wave_TokenCat {
+    Wave_TokenCat_None,
+    Wave_TokenCat_Operator,
+    Wave_TokenCat_Keyword,
 };
 
 struct Wave_TokenCounters {
@@ -178,6 +186,7 @@ struct Wave_TokenVector {
 
 struct Wave_TokenVector Wave_TokenVector_new(const size_t capacity);
 bool Wave_TokenVector_push(struct Wave_TokenVector *const vector, const struct Wave_Token token);
+// mk: deep token delete
 void Wave_TokenVector_delete(struct Wave_TokenVector *const vector);
 
 struct Wave_Token {
@@ -189,8 +198,12 @@ struct Wave_Token {
         struct Wave_String str;
         struct Wave_Numeric num;
     } data;
+    enum Wave_TokenCat category;
 };
 
 bool Wave_Token_do_counters_match(const struct Wave_TokenCounters *const counters);
+void Wave_Token_delete(struct Wave_Token *const token);
+const char *Wave_Token_keyword_to_string(const enum Wave_TokenType token_type);
+const char *Wave_Token_to_string(const enum Wave_TokenType token_type);
 
 #endif

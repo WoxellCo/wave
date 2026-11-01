@@ -4,6 +4,7 @@
 #include "wave/token.h"
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 #include <wave/_debug.h>
 #include <stdio.h>
 
@@ -25,13 +26,37 @@ void Wave_Debug_dump_token(const struct Wave_Token t) {
     Wave_Debug_dump_char_loc(t.location);
     printf("token_length: %zu\n", t.length);
 
-    if (t.type == Wave_TokenType_LIT_STR) {
-        Wave_Debug_dump_string(t.data.str);
-    } else if (t.type == Wave_TokenType_LIT_NUM) {
-        Wave_Debug_dump_numeric(t.data.num);
+    if (t.category == Wave_TokenCat_None) {
+        if (t.type == Wave_TokenType_LIT_STR) {
+            Wave_Debug_dump_string(t.data.str);
+        } else if (t.type == Wave_TokenType_LIT_NUM) {
+            Wave_Debug_dump_numeric(t.data.num);
+        } else if (t.type == Wave_TokenType_ID) {
+            printf("IDENTIFIER: `");
+            Wave_Debug_print_string(t.data.str);
+            puts("`");
+        } else if (t.type == Wave_TokenType_SEMICOLON) {
+            puts("SEMICOLON `;`");
+        } else {
+            printf("<? ? ?>\n");
+        }
+    } else if (t.category == Wave_TokenCat_Operator) {
+        /*char op[4] = "";
+        #define opass(x) strncpy(op, (x), strlen(x) + 1)
+        if (t.type == Wave_TokenType_ASS) {
+            opass("=");
+        } else if (t.type == Wave_TokenType_ADD) {
+            opass("+");
+        } else {
+            puts("<unknown operator>");
+        }*/
+        printf("OPERATOR: `%s`\n", Wave_Token_to_string(t.type));
+    } else if (t.category == Wave_TokenCat_Keyword) {
+        printf("KEYWORD: `%s`\n", Wave_Token_keyword_to_string(t.type));
     } else {
         printf("<? ? ?>\n");
     }
+    puts(".");
 }
 
 void Wave_Debug_dump_token_list(const struct Wave_TokenVector vec) {
