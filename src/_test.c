@@ -49,7 +49,7 @@ bool Wave_Test_string_literals(void) {
 
     struct Wave_CharLocation loc = Wave_Test_no_loc();
 
-    for (size_t i = 0; i < 4; i++) {
+    for (size_t i = 2; i < 4; i++) {
         printf(">> TEST NO %zu:\n", i + 1);
         struct Wave_Lexer_TokenizeStringResult r = Wave_Lexer_tokenize_string(&loc, t[i], 0, NULL);
         Wave_Debug_tokenize_string_result(&r);

@@ -116,7 +116,7 @@ struct Wave_Unicode_CharUtf8 Wave_Unicode_CharUtf8_assign(const unsigned char *c
     }
 
     size_t len = 0;
-    for (len = 1; len < 4; len++) {
+    if (s[0] != '\0') for (len = 1; len < 4; len++) {
         if (!Wave_Unicode_CharUtf8_is_multibyte_follower(s[len])) {
             break;
         }

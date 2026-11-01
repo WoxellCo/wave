@@ -10,6 +10,8 @@
 #include <wave/_debug.h>
 #include <wave/lexer-fstr.h>
 
+#include <crtdbg.h>
+
 struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
     struct Wave_CharLocation *const coords,
     const char *const source,

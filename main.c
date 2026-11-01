@@ -10,8 +10,10 @@
 #include <string.h>
 #include <wave.h>
 
+#include <crtdbg.h>
+
+_CrtSetBreakAlloc();
 int main(void) {
-    puts("???");
     if (!setlocale(LC_ALL, "")) {
         if (!setlocale(LC_ALL, ".UTF8")) {
             if (!setlocale(LC_ALL, "C.UTF-8") && !setlocale(LC_ALL, "en_US.UTF-8")) {
@@ -19,15 +21,11 @@ int main(void) {
             }
         }
     }
-    puts("a");
     Wave_Test_number_literals();
-    puts("b");
 
     Wave_Test_escape_sequences();
-    puts("c");
 
     Wave_Test_string_literals();
-    puts("d");
 
     struct Wave_Unicode_CharUtf8 ch = Wave_Unicode_CharUtf8_get_at(0x10F223);
     //Wave_Debug_bitset32_dump(ch);
@@ -43,7 +41,7 @@ int main(void) {
     printf("%u\n", Wave_Unicode_CharUtf8_get_length(ch));
     printf("%u\n", Wave_Unicode_CharUtf8_get_index(ch));
 
-    /*char *buffer = NULL;
+    char *buffer = NULL;
     FILE *f = fopen("../examples/test.wave", "r");
 
     if (f == NULL) {
@@ -79,5 +77,5 @@ int main(void) {
     const struct Wave_Lexer_TokenizeResult r = Wave_Lexer_tokenize(&loc, buffer, 0, NULL);
     Wave_Debug_dump_token_list(r.token_vector);
 
-    free(buffer);*/
+    free(buffer);
 }

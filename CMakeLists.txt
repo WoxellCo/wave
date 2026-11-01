@@ -48,5 +48,15 @@ set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_WARNING_AS_ERROR ON)
 add_executable(${PROJECT_NAME}c main.c)
 target_link_libraries(wavec PRIVATE wave)
 
+option(WAVE_SANITIZE "Build with ASan" ON)
+
+if(MSVC AND WAVE_SANITIZE)
+    string(REPLACE "/RTC1" "" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
+    set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT ProgramDatabase)
+    foreach(tgt wave wavec)
+        target_compile_options(${tgt} PRIVATE /fsanitize=address)
+    endforeach()
+endif()
+
 # mk: on windows use `cmake -G"MinGW Makefiles" ..` to generate `compile_commands.json`
 # mk: to build on msvc: `cmake -G"Visual Studio 17 2022" ..` then `cmake --build .`

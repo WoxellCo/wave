@@ -8,6 +8,7 @@
 #include <wave/unicode.h>
 
 #include <wave/int-target.h>
+#include <crtdbg.h>
 
 struct Wave_String Wave_String_new(const size_t capacity) {
     struct Wave_String s = (struct Wave_String){
@@ -159,7 +160,7 @@ bool Wave_String_append(struct Wave_String *const s, const char *const str) {
         if (!Wave_String_reserve(s, s->length + str_len + 1))
             return false;
 
-    strncpy(s->data.mut_str + s->length, str, s->length + str_len);
+    strncpy(s->data.mut_str + s->length, str, str_len);
     s->length += str_len;
     s->data.mut_str[s->length] = '\0';
 
