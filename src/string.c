@@ -8,7 +8,6 @@
 #include <wave/unicode.h>
 
 #include <wave/int-target.h>
-#include <crtdbg.h>
 
 struct Wave_String Wave_String_new(const size_t capacity) {
     struct Wave_String s = (struct Wave_String){

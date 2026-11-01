@@ -10,9 +10,6 @@
 #include <string.h>
 #include <wave.h>
 
-#include <crtdbg.h>
-
-_CrtSetBreakAlloc();
 int main(void) {
     if (!setlocale(LC_ALL, "")) {
         if (!setlocale(LC_ALL, ".UTF8")) {
