@@ -1,8 +1,5 @@
 #include <wave/_debug.h>
 #include <wave/_test.h>
-#include "wave/lexer.h"
-#include "wave/token.h"
-#include "wave/unicode.h"
 #include <locale.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -41,7 +38,7 @@ int main(void) {
     printf("%u\n", Wave_Unicode_CharUtf8_get_index(ch));
 
     char *buffer = NULL;
-    FILE *f = fopen("../examples/test.wave", "r");
+    FILE *f = fopen("../../../examples/test.wave", "r");
 
     if (f == NULL) {
         fprintf(stderr, "couldn't open test file\n");

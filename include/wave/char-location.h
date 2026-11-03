@@ -12,6 +12,11 @@ struct Wave_CharLocation {
     size_t index, utf8_index;
 };
 
+struct Wave_CharLength {
+    size_t bytes;
+    size_t utf8;
+};
+
 // mk: returns how many bytes did the function advance
 // mk: no, nvm it would be useful if i returned the utf-8 char instead
 //struct Wave_Unicode_CharUtf8 Wave_CharLocation_advance(struct Wave_CharLocation *const loc, const char *const source, const size_t advance_count);

@@ -167,6 +167,8 @@ enum Wave_TokenCat {
     Wave_TokenCat_None,
     Wave_TokenCat_Operator,
     Wave_TokenCat_Keyword,
+    Wave_TokenCat_Parenthesis,
+    Wave_TokenCat_Sign
 };
 
 struct Wave_TokenCounters {

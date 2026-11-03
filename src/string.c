@@ -166,6 +166,23 @@ bool Wave_String_append(struct Wave_String *const s, const char *const str) {
     return true;
 }
 
+// mk: string will be corrupt in case of failure and won't be deleted
+bool Wave_String_assign(struct Wave_String* const s, const char* const str) {
+    if (str == NULL)
+        return false;
+    size_t pivot;
+    s->utf8_length = 0;
+    for (pivot = 0; pivot < s->length && str[pivot] != '\0'; pivot++) {
+        s->data.mut_str[pivot] = str[pivot];
+        const size_t ch_len = Wave_Unicode_CharUtf8_get_length_from_byte((uint8_t)str[pivot]);
+        if (ch_len > 0) {
+            s->utf8_length++;
+        }
+    }
+    
+    return Wave_String_append(s, str + pivot);
+}
+
 // mk: length in bytes? no in utf-8
 struct Wave_String Wave_String_view_new(const char *const str, const size_t max_utf8_length) {
     struct Wave_String s = (struct Wave_String){

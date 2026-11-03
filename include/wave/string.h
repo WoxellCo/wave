@@ -26,6 +26,7 @@ void Wave_String_delete(struct Wave_String *const s);
 bool Wave_String_push(struct Wave_String *const s, const char ch);
 bool Wave_String_push_utf8(struct Wave_String *const s, const struct Wave_Unicode_CharUtf8 ch);
 bool Wave_String_append(struct Wave_String *const s, const char *const str);
+bool Wave_String_assign(struct Wave_String* const s, const char* const str);
 
 struct Wave_String Wave_String_view_new(const char *const str, const size_t max_utf8_length);
 // mk: returns the diff size in bytes

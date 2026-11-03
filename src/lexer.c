@@ -1,5 +1,3 @@
-#include "wave/char-location.h"
-#include "wave/token.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -9,6 +7,13 @@
 #include <stdlib.h>
 #include <wave/_debug.h>
 #include <wave/lexer-fstr.h>
+
+#define TOKEN_SP(t) (t).category == Wave_TokenCat_Operator ||\
+                    (t).category == Wave_TokenCat_Keyword  ||\
+                    (t).category == Wave_TokenCat_Sign     ||\
+                    (t).type == Wave_TokenType_LPAREN      ||\
+                    (t).type == Wave_TokenType_LBRACK      ||\
+                    (t).type == Wave_TokenType_LBRACE
 
 struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
     struct Wave_CharLocation *const coords,
@@ -217,34 +222,91 @@ struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
             coords->utf8_column--;
         } else if (ch == '/') {
             // mk: comment, division or regex literal
+            if (TOKEN_SP(tokens->tokens[tokens->size - 1])) { // mk: regex
+                // ...
+            }
+            else {
+                const struct Wave_Lexer_TokenizeOperatorResult operator_token_result = Wave_Lexer_tokenize_operator(coords, source, result.n, delimiter_predicates);
 
+                if (operator_token_result.error.type > 0) {
+                    compilation_error = operator_token_result.error;
+                    break;
+                }
+
+                token = (struct Wave_Token){
+                    .type = operator_token_result.operator,
+                    .location = token.location,
+                    .length = operator_token_result.n,
+                    .data.none = 0,
+                    .category = Wave_TokenCat_Operator
+                };
+
+                result.n += operator_token_result.n - 1;
+                coords->index--;
+                coords->column--;
+                coords->utf8_index--;
+                coords->utf8_column--;
+            }
         } else if (ch == '<') {
             // mk: less than, generics? or xml
-            
+            if (TOKEN_SP(tokens->tokens[tokens->size - 1])) { // mk: xml
+                // ...
+            }
+            else {
+                const struct Wave_Lexer_TokenizeOperatorResult operator_token_result = Wave_Lexer_tokenize_operator(coords, source, result.n, delimiter_predicates);
+
+                if (operator_token_result.error.type > 0) {
+                    compilation_error = operator_token_result.error;
+                    break;
+                }
+
+                token = (struct Wave_Token){
+                    .type = operator_token_result.operator,
+                    .location = token.location,
+                    .length = operator_token_result.n,
+                    .data.none = 0,
+                    .category = Wave_TokenCat_Operator
+                };
+
+                result.n += operator_token_result.n - 1;
+                coords->index--;
+                coords->column--;
+                coords->utf8_index--;
+                coords->utf8_column--;
+            }
         } else if (ch == '(') {
             token.type = Wave_TokenType_LPAREN;
+            token.category = Wave_TokenCat_Parenthesis;
             token_counters.lparen++;
         } else if (ch == ')') {
             token.type = Wave_TokenType_RPAREN;
+            token.category = Wave_TokenCat_Parenthesis;
             token_counters.rparen++;
         } else if (ch == '[') {
             token.type = Wave_TokenType_LBRACK;
+            token.category = Wave_TokenCat_Parenthesis;
             token_counters.lbrack++;
         } else if (ch == ']') {
             token.type = Wave_TokenType_RBRACK;
+            token.category = Wave_TokenCat_Parenthesis;
             token_counters.rbrack++;
         } else if (ch == '{') {
             token.type = Wave_TokenType_LBRACE;
+            token.category = Wave_TokenCat_Parenthesis;
             token_counters.lbrace++;
         } else if (ch == '}') {
             token.type = Wave_TokenType_RBRACE;
+            token.category = Wave_TokenCat_Parenthesis;
             token_counters.rbrace++;
         } else if (ch == ';') {
+            token.category = Wave_TokenCat_Sign;
             token.type = Wave_TokenType_SEMICOLON;
         } else if (ch == ',') {
+            token.category = Wave_TokenCat_Sign;
             token.type = Wave_TokenType_COMMA;
         } else if (ch == ':') {
             // mk: colon or `::`
+            token.category = Wave_TokenCat_Sign;
             token.type = Wave_TokenType_COLON;
             
         } else if (ch == '$') {
