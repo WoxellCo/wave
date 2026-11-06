@@ -54,8 +54,8 @@ bool Wave_Fstr_expr_delimeter_predicate(
     const struct Wave_Lexer_DelimiterPredicateParams params
 );
 
-struct Wave_TokenFstr_EscOrExprVector Wave_TokenString_EscOrExprVector_new(const size_t capacity);
-bool Wave_TokenFstr_EscOrExprVector_push(struct Wave_TokenFstr_EscOrExprVector *const vector, const struct Wave_TokenFstr_Element token);
-void Wave_TokenFstr_EscOrExprVector_delete(struct Wave_TokenFstr_EscOrExprVector *const vector);
+struct Wave_TokenFstr_EscOrExprVector Wave_TokenString_EscOrExprVector_new(struct Wave_Context *const context, const size_t capacity);
+bool Wave_TokenFstr_EscOrExprVector_push(struct Wave_Context *const context, struct Wave_TokenFstr_EscOrExprVector *const vector, const struct Wave_TokenFstr_Element token);
+void Wave_TokenFstr_EscOrExprVector_delete(struct Wave_Context *const context, struct Wave_TokenFstr_EscOrExprVector *const vector);
 
 #endif

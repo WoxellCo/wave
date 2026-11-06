@@ -25,8 +25,8 @@ struct Wave_TokenString {
     struct Wave_TokenString_EscVector esc_vector;
 };
 
-struct Wave_TokenString_EscVector Wave_TokenString_EscVector_new(const size_t capacity);
-bool Wave_TokenString_EscVector_push(struct Wave_TokenString_EscVector *const vector, const struct Wave_TokenString_Esc token);
-void Wave_TokenString_EscVector_delete(struct Wave_TokenString_EscVector *const vector);
+struct Wave_TokenString_EscVector Wave_TokenString_EscVector_new(struct Wave_Context *const context, const size_t capacity);
+bool Wave_TokenString_EscVector_push(struct Wave_Context *const context, struct Wave_TokenString_EscVector *const vector, const struct Wave_TokenString_Esc token);
+void Wave_TokenString_EscVector_delete(struct Wave_Context *const context, struct Wave_TokenString_EscVector *const vector);
 
 #endif

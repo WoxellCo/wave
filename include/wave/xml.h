@@ -1,6 +1,7 @@
 #ifndef WAVE_XML_H
 #define WAVE_XML_H
 
+#include <wave/lexer.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -8,6 +9,7 @@
 #include <wave/string.h>
 #include <wave/token-string.h>
 #include <wave/char-location.h>
+#include <wave/target/restrict.h>
 
 #define Wave_Xml_SELF_CLOSING		(1u << 0)
 #define Wave_Xml_CLOSING			(1u << 1)
@@ -104,7 +106,21 @@ void Wave_Xml_TagType_delete(struct Wave_Xml_TagType* const tag_type);
 void Wave_Xml_Tag_delete(struct Wave_Xml_Tag* const tag);
 
 // mk: alright to initialize this you have to pass the address of the uninitialized value
-bool Wave_Xml_Prop_lex(const char *const source);
+bool Wave_Xml_Prop_lex(
+	struct Wave_Xml_Prop *wave_restrict const prop,
+	struct Wave_CharLocation *wave_restrict const loc,
+	const char *wave_restrict const source,
+	const size_t offset,
+	#ifndef _MSC_VER
+	const Wave_Lexer_DelimiterPredicate delimiter_predicates[wave_restrict const]
+	#else
+	const Wave_Lexer_DelimiterPredicate *wave_restrict const delimiter_predicates
+	#endif
+);
+void Wave_Xml_Prop_delete(struct Wave_Xml_Prop *const prop);
+#define Wave_Xml_PropValue_is_none(prop_value) ((prop_value).boundaries == '\0')
+#define Wave_Xml_PropValue_is_expr(prop_value) ((prop_value).boundaries == '$')
+#define Wave_Xml_PropValue_is_text(prop_value) ((prop_value).boundaries == '"' || (prop_value).boundaries == '\'')
 
 void Wave_Xml_delete(struct Wave_Xml *const element);
 

@@ -61,6 +61,7 @@ bool Wave_Lexer_execute_delimiter_predicates(
 );
 
 struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
+    struct Wave_Context *const allocator,
     struct Wave_CharLocation *const coords,                         // mk: initial coords, it mutates during the execution
     const char *const source,                                       // mk: source code to tokenize
     const size_t offset,                                            // mk: offset, if the code begins at character 12 and offset is 2, the tokenizer starta at characters 14
@@ -79,6 +80,7 @@ struct Wave_Lexer_TokenizeStringResult {
 };
 
 struct Wave_Lexer_TokenizeStringResult Wave_Lexer_tokenize_string(
+    struct Wave_Context *const allocator,
     struct Wave_CharLocation *const coords,
     const char *const source,
     const size_t offset,

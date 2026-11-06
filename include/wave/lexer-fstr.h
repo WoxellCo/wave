@@ -12,6 +12,7 @@ struct Wave_Lexer_TokenizeFstrResult {
 };
 
 struct Wave_Lexer_TokenizeFstrResult Wave_Lexer_tokenize_fstr(
+    struct Wave_Context *const context,
     struct Wave_CharLocation *const coords,
     const char *const source,
     const size_t offset,

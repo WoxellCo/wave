@@ -186,10 +186,10 @@ struct Wave_TokenVector {
     size_t capacity;
 };
 
-struct Wave_TokenVector Wave_TokenVector_new(const size_t capacity);
-bool Wave_TokenVector_push(struct Wave_TokenVector *const vector, const struct Wave_Token token);
+struct Wave_TokenVector Wave_TokenVector_new(struct Wave_Context *const context, const size_t capacity);
+bool Wave_TokenVector_push(struct Wave_Context *const context, struct Wave_TokenVector *const vector, const struct Wave_Token token);
 // mk: deep token delete
-void Wave_TokenVector_delete(struct Wave_TokenVector *const vector);
+void Wave_TokenVector_delete(struct Wave_Context *const context, struct Wave_TokenVector *const vector);
 
 struct Wave_Token {
     enum Wave_TokenType type;
@@ -204,7 +204,7 @@ struct Wave_Token {
 };
 
 bool Wave_Token_do_counters_match(const struct Wave_TokenCounters *const counters);
-void Wave_Token_delete(struct Wave_Token *const token);
+void Wave_Token_delete(struct Wave_Context *const context, struct Wave_Token *const token);
 const char *Wave_Token_keyword_to_string(const enum Wave_TokenType token_type);
 const char *Wave_Token_to_string(const enum Wave_TokenType token_type);
 

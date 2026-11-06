@@ -37,6 +37,11 @@ bool Wave_TokenString_EscVector_push(struct Wave_TokenString_EscVector *const ve
 
 
 void Wave_TokenString_EscVector_delete(struct Wave_TokenString_EscVector *const vector) {
+    if (vector == NULL)
+        return;
+    if (vector->sequences == NULL || vector->capacity)
+        return;
+    
     free(vector->sequences);
     vector->sequences = NULL;
     vector->size = 0;
