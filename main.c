@@ -1,3 +1,4 @@
+#include "waux.h"
 #include <wave/_debug.h>
 #include <wave/_test.h>
 #include <locale.h>
@@ -16,13 +17,21 @@ int main(void) {
             }
         }
     }
-    //Wave_Test_number_literals();
 
-    //Wave_Test_escape_sequences();
+    struct Wave_Context ctx = {
+        .allocator = {
+            .alloc = w_alloc,
+            .userdata = NULL
+        }
+    };
+    
+    Wave_Test_number_literals();
 
-    //Wave_Test_string_literals();
+    Wave_Test_escape_sequences(&ctx);
 
-    Wave_Test_symbols();
+    Wave_Test_string_literals(&ctx);
+
+    Wave_Test_symbols(&ctx);
 
     struct Wave_Unicode_CharUtf8 ch = Wave_Unicode_CharUtf8_get_at(0x10F223);
     //Wave_Debug_bitset32_dump(ch);
@@ -70,10 +79,10 @@ int main(void) {
 
     printf("STRLEN: %zu\n", strlen(buffer));
 
-    struct Wave_Lexer_TokenizeResult r = Wave_Lexer_tokenize(&loc, buffer, 0, NULL);
+    struct Wave_Lexer_TokenizeResult r = Wave_Lexer_tokenize(&ctx, &loc, buffer, 0, NULL);
     Wave_Debug_dump_token_list(r.token_vector);
 
     free(buffer);
 
-    Wave_TokenVector_delete(&r.token_vector);
+    Wave_TokenVector_delete(&ctx, &r.token_vector);
 }

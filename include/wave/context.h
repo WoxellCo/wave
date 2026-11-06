@@ -11,7 +11,7 @@ struct Wave_Allocator {
 };
 
 struct Wave_Context {
-    struct Wave_Allocator *allocator
+    struct Wave_Allocator allocator;
 };
 
 #endif

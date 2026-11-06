@@ -4,6 +4,7 @@
 #include <wave/error.h>
 
 struct Wave_String Wave_Error_compilation_error_to_string(
+    struct Wave_Context *const context,
     const struct Wave_CharLocation *const coords,
     const char *const source,
     const struct Wave_CompilationError *const err
@@ -54,7 +55,7 @@ struct Wave_String Wave_Error_compilation_error_to_string(
             break;
     }
 
-    message = Wave_String_from(buffer);
+    message = Wave_String_from(context, buffer);
 
     if (Wave_String_is_null(message)) {
         exit(1);

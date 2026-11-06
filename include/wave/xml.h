@@ -102,11 +102,12 @@ struct Wave_Xml_Prop {
 	struct Wave_CharLocation loc;	// mk: location of the first character of the key, the whole length can be retrieved with the previous properties
 };
 
-void Wave_Xml_TagType_delete(struct Wave_Xml_TagType* const tag_type);
-void Wave_Xml_Tag_delete(struct Wave_Xml_Tag* const tag);
+void Wave_Xml_TagType_delete(struct Wave_Context *const context, struct Wave_Xml_TagType* const tag_type);
+void Wave_Xml_Tag_delete(struct Wave_Context *const context, struct Wave_Xml_Tag* const tag);
 
 // mk: alright to initialize this you have to pass the address of the uninitialized value
 bool Wave_Xml_Prop_lex(
+	struct Wave_Context *const context,
 	struct Wave_Xml_Prop *wave_restrict const prop,
 	struct Wave_CharLocation *wave_restrict const loc,
 	const char *wave_restrict const source,
@@ -117,17 +118,17 @@ bool Wave_Xml_Prop_lex(
 	const Wave_Lexer_DelimiterPredicate *wave_restrict const delimiter_predicates
 	#endif
 );
-void Wave_Xml_Prop_delete(struct Wave_Xml_Prop *const prop);
+void Wave_Xml_Prop_delete(struct Wave_Context *const context, struct Wave_Xml_Prop *const prop);
 #define Wave_Xml_PropValue_is_none(prop_value) ((prop_value).boundaries == '\0')
 #define Wave_Xml_PropValue_is_expr(prop_value) ((prop_value).boundaries == '$')
 #define Wave_Xml_PropValue_is_text(prop_value) ((prop_value).boundaries == '"' || (prop_value).boundaries == '\'')
 
-void Wave_Xml_delete(struct Wave_Xml *const element);
+void Wave_Xml_delete(struct Wave_Context *const context, struct Wave_Xml *const element);
 
-bool Wave_XmlVector_push(struct Wave_XmlVector* const vector, const struct Wave_XmlNode node);
-void Wave_XmlVector_delete(struct Wave_XmlVector *const vector);
+bool Wave_XmlVector_push(struct Wave_Context *const context, struct Wave_XmlVector* const vector, const struct Wave_XmlNode node);
+void Wave_XmlVector_delete(struct Wave_Context *const context, struct Wave_XmlVector *const vector);
 
-void Wave_Xml_Text_delete(struct Wave_Xml_Text *const xml_text);
-void Wave_Xml_Expr_delete(struct Wave_Xml_Expr* const xml_expr);
+void Wave_Xml_Text_delete(struct Wave_Context *const context, struct Wave_Xml_Text *const xml_text);
+void Wave_Xml_Expr_delete(struct Wave_Context *const context, struct Wave_Xml_Expr* const xml_expr);
 
 #endif // !WAVE_XML_H

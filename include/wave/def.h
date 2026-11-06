@@ -6,7 +6,9 @@
 #include <stdbool.h>
 #include <wave/string.h>
 
-
+#define w_malloc(f, ud, size) ((f)((ud), NULL, 0, (size)))
+#define w_realloc(f, ud, ptr, osz, size) ((f)((ud), (ptr), (osz), (size)))
+#define w_free(f, ud, ptr, osz) ((f)((ud), (ptr), (osz), 0))
 
 /*union Wave_TokenData {
     

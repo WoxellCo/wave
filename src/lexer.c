@@ -1,3 +1,4 @@
+#include "wave/def.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -16,7 +17,7 @@
                     (t).type == Wave_TokenType_LBRACE
 
 struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
-    struct Wave_Context *const allocator,
+    struct Wave_Context *const context,
     struct Wave_CharLocation *const coords,
     const char *const source,
     const size_t offset,
@@ -30,7 +31,7 @@ struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
         .error = {
             .type = Wave_CompilationErrorType_None
         },
-        .token_vector = Wave_TokenVector_new(128),
+        .token_vector = Wave_TokenVector_new(context, 128),
         .n = 0,
         .flags = 0
     };
@@ -44,7 +45,7 @@ struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
 
     if (source == NULL || coords == NULL) {
         result.error.type = Wave_CompilationErrorType_UnexpectedNullPointer;
-        Wave_TokenVector_delete(tokens);
+        Wave_TokenVector_delete(context, tokens);
         return result;
     }
 
@@ -96,7 +97,7 @@ struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
             result.n++;
             continue;
         } else if (ch == '"' || ch == '\'') {
-            const struct Wave_Lexer_TokenizeStringResult string_token_result = Wave_Lexer_tokenize_string(allocator, coords, source, result.n, delimiter_predicates);
+            const struct Wave_Lexer_TokenizeStringResult string_token_result = Wave_Lexer_tokenize_string(context, coords, source, result.n, delimiter_predicates);
 
             if (string_token_result.error.type > 0) {
                 // mk: handle error
@@ -313,7 +314,7 @@ struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
         } else if (ch == '$') {
             // mk: fstr `$"..."` or `$'...'`
             if (src[1] == '"' || src[1] == '\'') {
-                const struct Wave_Lexer_TokenizeFstrResult fstring_token_result = Wave_Lexer_tokenize_fstr(coords, source, coords->index, delimiter_predicates, &token_counters);
+                const struct Wave_Lexer_TokenizeFstrResult fstring_token_result = Wave_Lexer_tokenize_fstr(context, coords, source, coords->index, delimiter_predicates, &token_counters);
 
                 if (fstring_token_result.error.type > 0) {
 
@@ -328,7 +329,7 @@ struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
             break;
         }
 
-        Wave_TokenVector_push(&result.token_vector, token);
+        Wave_TokenVector_push(context, &result.token_vector, token);
 
         coords->column++;
         coords->utf8_column++;
@@ -341,7 +342,7 @@ struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
     result.error = compilation_error;
 
     if (compilation_error.type != Wave_CompilationErrorType_None) {
-        struct Wave_String str = Wave_Error_compilation_error_to_string(coords, source, &compilation_error);
+        struct Wave_String str = Wave_Error_compilation_error_to_string(context, coords, source, &compilation_error);
         puts(str.data.str);
         exit(1);
     }
@@ -350,7 +351,7 @@ struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
 }
 
 struct Wave_Lexer_TokenizeStringResult Wave_Lexer_tokenize_string(
-    struct Wave_Context *const allocator,
+    struct Wave_Context *const context,
     struct Wave_CharLocation *const coords,
     const char *const source,
     const size_t offset,
@@ -414,7 +415,7 @@ struct Wave_Lexer_TokenizeStringResult Wave_Lexer_tokenize_string(
 
         Wave_Lexer_dp_check_derived(coords, NULL, source, coords->index) {
             result.error.type = Wave_CompilationErrorType_UnexpectedBoundary;
-            Wave_String_delete(allocator, &s);
+            Wave_String_delete(context, &s);
             result.flags |= WAVE_LEXER_TOKENIZE_RESULT_INTERRUPTED_BY_PREDICATE;
             return result;
         }
@@ -424,35 +425,35 @@ struct Wave_Lexer_TokenizeStringResult Wave_Lexer_tokenize_string(
             result.error.info.expected_sequence[0] = (char)bounds.bytes[0];
             result.error.info.expected_sequence[1] = '\0';
             result.error.info_type = Wave_CompilationErrorInfoType_ExpectedSequence;
-            Wave_String_delete(&s);
+            Wave_String_delete(context, &s);
             return result;
         }
 
         if (ch_first == '\\') {
-            struct Wave_Lexer_TokenizeEscResult token_result = Wave_Lexer_tokenize_esc(coords, source, offset + result.n, delimiter_predicates);
+            struct Wave_Lexer_TokenizeEscResult token_result = Wave_Lexer_tokenize_esc(context, coords, source, offset + result.n, delimiter_predicates);
             if (token_result.error.type != Wave_CompilationErrorType_None) {
                 result.error = token_result.error;
-                Wave_String_delete(&s);
+                Wave_String_delete(context, &s);
                 return result;
             }
             if (token_result.flags & WAVE_LEXER_TOKENIZE_RESULT_INTERRUPTED_BY_PREDICATE) {
                 result.flags |= WAVE_LEXER_TOKENIZE_RESULT_INTERRUPTED_BY_PREDICATE;
                 result.error.type = Wave_CompilationErrorType_UnexpectedBoundary;
-                Wave_String_delete(&s);
+                Wave_String_delete(context, &s);
                 return result;
             }
-            if (Wave_String_is_view(s) && !Wave_String_view_to_owned(allocator, &s)) {
+            if (Wave_String_is_view(s) && !Wave_String_view_to_owned(context, &s)) {
                 result.error.type = Wave_CompilationErrorType_InvalidAllocation;
-                Wave_String_delete(allocator, &s);
+                Wave_String_delete(context, &s);
                 return result;
             }
-            if (!Wave_String_append(allocator, &s, token_result.data.output.data.str)) {
+            if (!Wave_String_append(context, &s, token_result.data.output.data.str)) {
                 result.error.type = Wave_CompilationErrorType_InvalidAllocation;
-                Wave_String_delete(allocator, &s);
+                Wave_String_delete(context, &s);
                 return result;
             }
             result.n += token_result.n;
-            Wave_Lexer_clean_token_esc(&token_result);
+            Wave_Lexer_clean_token_esc(context, &token_result);
             // mk: remove the `"` or `'` already added before which is one utf-8 char and one byte
             //result.n--; // mk: but not here, becase unlike the charlocation, `result.n` is updated after, but it hits `continue` before
             coords->column--;
@@ -490,9 +491,9 @@ struct Wave_Lexer_TokenizeStringResult Wave_Lexer_tokenize_string(
 
         if (Wave_String_is_view(s)) {
             Wave_String_view_expand_utf8(&s, 1);
-        } else if (!Wave_String_push_utf8(allocator, &s, ch)) {
+        } else if (!Wave_String_push_utf8(context, &s, ch)) {
             result.error.type = Wave_CompilationErrorType_InvalidAllocation;
-            Wave_String_delete(allocator, &s);
+            Wave_String_delete(context, &s);
             return result;
         }
 
@@ -507,6 +508,7 @@ struct Wave_Lexer_TokenizeStringResult Wave_Lexer_tokenize_string(
 }
 
 struct Wave_Lexer_TokenizeEscResult Wave_Lexer_tokenize_esc(
+    struct Wave_Context *const context,
     struct Wave_CharLocation *const coords,
     const char *const source,
     const size_t offset,
@@ -547,7 +549,7 @@ struct Wave_Lexer_TokenizeEscResult Wave_Lexer_tokenize_esc(
     }*/
     result.data.sequence = Wave_String_view_new(src, 1);
   
-    result.data.output = Wave_String_new(4);
+    result.data.output = Wave_String_new(context, 4);
     if (Wave_String_is_null(result.data.output)) {
         result.error.type = Wave_CompilationErrorType_InvalidAllocation;
         //Wave_String_delete(&result.data.sequence);
@@ -589,10 +591,10 @@ struct Wave_Lexer_TokenizeEscResult Wave_Lexer_tokenize_esc(
     }
 
     if (ch != '\0') {
-        if (!Wave_String_push(&result.data.output, ch)) {
+        if (!Wave_String_push(context, &result.data.output, ch)) {
             result.error.type = Wave_CompilationErrorType_InvalidAllocation;
-            Wave_String_delete(&result.data.sequence);
-            Wave_String_delete(&result.data.output);
+            Wave_String_delete(context, &result.data.sequence);
+            Wave_String_delete(context, &result.data.output);
             return result;
         }
         result.n++;
@@ -604,8 +606,8 @@ struct Wave_Lexer_TokenizeEscResult Wave_Lexer_tokenize_esc(
             src = source + offset + result.n;
             Wave_Lexer_dp_check_derived(coords, NULL, source, coords->index) {
                 // mk: unfinished escape sequence
-                Wave_String_delete(&result.data.sequence);
-                Wave_String_delete(&result.data.output);
+                Wave_String_delete(context, &result.data.sequence);
+                Wave_String_delete(context, &result.data.output);
                 result.error.type = Wave_CompilationErrorType_UnexpectedBoundary;
                 result.flags |= WAVE_LEXER_TOKENIZE_RESULT_INTERRUPTED_BY_PREDICATE;
                 return result;
@@ -623,8 +625,8 @@ struct Wave_Lexer_TokenizeEscResult Wave_Lexer_tokenize_esc(
                 }*/
                 Wave_String_view_expand_utf8(&result.data.sequence, 1);
             } else {
-                Wave_String_delete(&result.data.sequence);
-                Wave_String_delete(&result.data.output);
+                Wave_String_delete(context, &result.data.sequence);
+                Wave_String_delete(context, &result.data.output);
                 result.error.type = Wave_CompilationErrorType_UnexpectedCharacter;
                 return result;
             }
@@ -633,9 +635,9 @@ struct Wave_Lexer_TokenizeEscResult Wave_Lexer_tokenize_esc(
         char *endptr = NULL;
         unsigned long value = strtoul(value_ptr, &endptr, 16);
         const struct Wave_Unicode_CharUtf8 ch_out = Wave_Unicode_CharUtf8_get_at((uint32_t)value);
-        if (!Wave_String_push_utf8(&result.data.output, ch_out)) {
-            Wave_String_delete(&result.data.sequence);
-            Wave_String_delete(&result.data.output);
+        if (!Wave_String_push_utf8(context, &result.data.output, ch_out)) {
+            Wave_String_delete(context, &result.data.sequence);
+            Wave_String_delete(context, &result.data.output);
             result.error.type = Wave_CompilationErrorType_InvalidAllocation;
             return result;
         }
@@ -660,8 +662,8 @@ struct Wave_Lexer_TokenizeEscResult Wave_Lexer_tokenize_esc(
                 src = source + offset + result.n;
                 Wave_Lexer_dp_check_derived(coords, NULL, source, coords->index) {
                     // mk: unfinished escape sequence
-                    Wave_String_delete(&result.data.sequence);
-                    Wave_String_delete(&result.data.output);
+                    Wave_String_delete(context, &result.data.sequence);
+                    Wave_String_delete(context, &result.data.output);
                     result.error.type = Wave_CompilationErrorType_UnexpectedBoundary;
                     result.flags |= WAVE_LEXER_TOKENIZE_RESULT_INTERRUPTED_BY_PREDICATE;
                     return result;
@@ -683,8 +685,8 @@ struct Wave_Lexer_TokenizeEscResult Wave_Lexer_tokenize_esc(
                     break;
                 } else {
                     // mk: error: `\u{FF$}
-                    Wave_String_delete(&result.data.sequence);
-                    Wave_String_delete(&result.data.output);
+                    Wave_String_delete(context, &result.data.sequence);
+                    Wave_String_delete(context, &result.data.output);
                     result.error.type = Wave_CompilationErrorType_UnexpectedCharacter;
                     return result;
                 }
@@ -697,8 +699,8 @@ struct Wave_Lexer_TokenizeEscResult Wave_Lexer_tokenize_esc(
                 src = source + offset + result.n;
                 Wave_Lexer_dp_check_derived(coords, NULL, source, coords->index) {
                     // mk: unfinished escape sequence
-                    Wave_String_delete(&result.data.sequence);
-                    Wave_String_delete(&result.data.output);
+                    Wave_String_delete(context, &result.data.sequence);
+                    Wave_String_delete(context, &result.data.output);
                     result.error.type = Wave_CompilationErrorType_UnexpectedBoundary;
                     result.flags |= WAVE_LEXER_TOKENIZE_RESULT_INTERRUPTED_BY_PREDICATE;
                     return result;
@@ -709,16 +711,16 @@ struct Wave_Lexer_TokenizeEscResult Wave_Lexer_tokenize_esc(
                     (*src >= 'a' && *src <= 'f') ||
                     (*src >= 'A' && *src <= 'F')
                 ) {
-                    if (!Wave_String_push(&result.data.output, *src)) {
-                        Wave_String_delete(&result.data.sequence);
-                        Wave_String_delete(&result.data.output);
+                    if (!Wave_String_push(context, &result.data.output, *src)) {
+                        Wave_String_delete(context, &result.data.sequence);
+                        Wave_String_delete(context, &result.data.output);
                         result.error.type = Wave_CompilationErrorType_InvalidAllocation;
                         return result;
                     }
                 } else {
                     // mk: just no.
-                    Wave_String_delete(&result.data.sequence);
-                    Wave_String_delete(&result.data.output);
+                    Wave_String_delete(context, &result.data.sequence);
+                    Wave_String_delete(context, &result.data.output);
                     result.error.type = Wave_CompilationErrorType_UnexpectedCharacter;
                     return result;
                 }
@@ -726,23 +728,23 @@ struct Wave_Lexer_TokenizeEscResult Wave_Lexer_tokenize_esc(
         }
         result.n++;
         if (value_len < 1 || value_len > 6) {
-            Wave_String_delete(&result.data.sequence);
-            Wave_String_delete(&result.data.output);
+            Wave_String_delete(context, &result.data.sequence);
+            Wave_String_delete(context, &result.data.output);
             result.error.type = Wave_CompilationErrorType_InvalidValue;
             return result;
         }
         char *endptr = NULL;
         unsigned long value = strtoul(value_ptr, &endptr, 16);
         const struct Wave_Unicode_CharUtf8 ch_out = Wave_Unicode_CharUtf8_get_at((uint32_t)value);
-        if (!Wave_String_push_utf8(&result.data.output, ch_out)) {
-            Wave_String_delete(&result.data.sequence);
-            Wave_String_delete(&result.data.output);
+        if (!Wave_String_push_utf8(context, &result.data.output, ch_out)) {
+            Wave_String_delete(context, &result.data.sequence);
+            Wave_String_delete(context, &result.data.output);
             result.error.type = Wave_CompilationErrorType_InvalidAllocation;
             return result;
         }
     } else if (*src == '\0') {
-        Wave_String_delete(&result.data.sequence);
-        Wave_String_delete(&result.data.output);
+        Wave_String_delete(context, &result.data.sequence);
+        Wave_String_delete(context, &result.data.output);
         result.error.type = Wave_CompilationErrorType_UnexpectedEndOfFile;
         return result;
     } else {
@@ -1426,6 +1428,7 @@ bool Wave_Lexer_execute_delimiter_predicates(
 }
 
 Wave_Lexer_DelimiterPredicate *Wave_Lexer_dp_new_vector_with_concatenation(
+    struct Wave_Context *const context,
     #ifndef _MSC_VER
     const Wave_Lexer_DelimiterPredicate l1[const],
     const Wave_Lexer_DelimiterPredicate l2[const]
@@ -1439,7 +1442,7 @@ Wave_Lexer_DelimiterPredicate *Wave_Lexer_dp_new_vector_with_concatenation(
     for (lengths[0] = 0; l1[lengths[0]] != NULL; lengths[0]++);
     for (lengths[1] = 0; l2[lengths[1]] != NULL; lengths[1]++);
 
-    Wave_Lexer_DelimiterPredicate *const vector = (Wave_Lexer_DelimiterPredicate *)malloc((lengths[0] + lengths[1] + 1) * sizeof(Wave_Lexer_DelimiterPredicate));
+    Wave_Lexer_DelimiterPredicate *const vector = (Wave_Lexer_DelimiterPredicate *)w_malloc(context->allocator.alloc, context->allocator.userdata, (lengths[0] + lengths[1] + 1) * sizeof(Wave_Lexer_DelimiterPredicate));
     if (vector == NULL)
         return NULL;
 
@@ -1454,24 +1457,26 @@ Wave_Lexer_DelimiterPredicate *Wave_Lexer_dp_new_vector_with_concatenation(
     return vector;
 }
 
-void Wave_Lexer_dp_delete_vector(Wave_Lexer_DelimiterPredicate **const vector) {
+void Wave_Lexer_dp_delete_vector(struct Wave_Context *const context, Wave_Lexer_DelimiterPredicate **const vector) {
     if (vector == NULL || *vector == NULL)
         return;
-    free(*vector);
+    size_t size = 1;
+    for (size = 1; vector[size - 1] != NULL; size++);
+    w_free(context->allocator.alloc, context->allocator.userdata, *vector, size * sizeof(Wave_Lexer_DelimiterPredicate));
     *vector = NULL;
 }
 
-void Wave_Lexer_clean_token_esc(struct Wave_Lexer_TokenizeEscResult *const token_result) {
-    Wave_String_delete(&token_result->data.output);
-    Wave_String_delete(&token_result->data.sequence);
+void Wave_Lexer_clean_token_esc(struct Wave_Context *const context, struct Wave_Lexer_TokenizeEscResult *const token_result) {
+    Wave_String_delete(context, &token_result->data.output);
+    Wave_String_delete(context, &token_result->data.sequence);
 }
 
-void Wave_Lexer_clean_token_string(struct Wave_Lexer_TokenizeStringResult *const token_result) {
-    Wave_String_delete(&token_result->string_data);
+void Wave_Lexer_clean_token_string(struct Wave_Context *const context, struct Wave_Lexer_TokenizeStringResult *const token_result) {
+    Wave_String_delete(context, &token_result->string_data);
 }
 
-void Wave_Lexer_clean_token_symbol(struct Wave_Lexer_TokenizeSymbolResult *const token_result) {
+void Wave_Lexer_clean_token_symbol(struct Wave_Context *const context, struct Wave_Lexer_TokenizeSymbolResult *const token_result) {
     if (!(token_result->flags & WAVE_LEXER_TOKENIZE_SYMBOL_RESULT_KEYWORD)) {
-        Wave_String_delete(&token_result->data.identifier.id);
+        Wave_String_delete(context, &token_result->data.identifier.id);
     }
 }

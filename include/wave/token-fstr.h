@@ -56,6 +56,7 @@ bool Wave_Fstr_expr_delimeter_predicate(
 
 struct Wave_TokenFstr_EscOrExprVector Wave_TokenString_EscOrExprVector_new(struct Wave_Context *const context, const size_t capacity);
 bool Wave_TokenFstr_EscOrExprVector_push(struct Wave_Context *const context, struct Wave_TokenFstr_EscOrExprVector *const vector, const struct Wave_TokenFstr_Element token);
+bool Wave_TokenFstr_EscOrExprVector_push(struct Wave_Context *const context, struct Wave_TokenFstr_EscOrExprVector *const vector, const struct Wave_TokenFstr_Element token);
 void Wave_TokenFstr_EscOrExprVector_delete(struct Wave_Context *const context, struct Wave_TokenFstr_EscOrExprVector *const vector);
 
 #endif

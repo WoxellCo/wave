@@ -1,3 +1,4 @@
+#include <wave/def.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -9,7 +10,7 @@
 
 #include <wave/int-target.h>
 
-struct Wave_String Wave_String_new(const size_t capacity) {
+struct Wave_String Wave_String_new(struct Wave_Context *const context, const size_t capacity) {
     struct Wave_String s = (struct Wave_String){
         .data.mut_str = NULL,
         .length = 0,
@@ -20,7 +21,7 @@ struct Wave_String Wave_String_new(const size_t capacity) {
     if (capacity == 0)
         return s;
 
-    s.data.mut_str = (char *)malloc(capacity * sizeof(char));
+    s.data.mut_str = (char *)w_malloc(context->allocator.alloc, context->allocator.userdata, capacity * sizeof(char));
 
     if (s.data.mut_str != NULL) {
         s.capacity = capacity;
@@ -30,8 +31,8 @@ struct Wave_String Wave_String_new(const size_t capacity) {
     return s;
 }
 
-struct Wave_String Wave_String_from_and_max_len(const char *const str, const size_t max_len) {
-    struct Wave_String s = Wave_String_new(max_len + 1);
+struct Wave_String Wave_String_from_and_max_len(struct Wave_Context *const context, const char *const str, const size_t max_len) {
+    struct Wave_String s = Wave_String_new(context, max_len + 1);
 
     if (s.capacity == 0)
         return s;
@@ -56,27 +57,27 @@ struct Wave_String Wave_String_from_and_max_len(const char *const str, const siz
     return s;
 }
 
-struct Wave_String Wave_String_from(const char *const str) {
+struct Wave_String Wave_String_from(struct Wave_Context *const context, const char *const str) {
     const size_t str_len = strlen(str);
-    struct Wave_String s = Wave_String_from_and_max_len(str, str_len);
+    struct Wave_String s = Wave_String_from_and_max_len(context, str, str_len);
     return s;
 }
 
-void Wave_String_delete(struct Wave_String *const s) {
+void Wave_String_delete(struct Wave_Context *const context, struct Wave_String *const s) {
     if (!Wave_String_is_view(*s) && !Wave_String_is_null(*s))
-        free(s->data.mut_str);
+        w_free(context->allocator.alloc, context->allocator.userdata, (void *)s->data.mut_str, s->capacity * sizeof(char));
     *s = Wave_String_null;
 }
 
-bool Wave_String_reserve(struct Wave_String *const s, const size_t capacity) {
+bool Wave_String_reserve(struct Wave_Context *const context, struct Wave_String *const s, const size_t capacity) {
 
     if (s->capacity == 0) {
-        *s = Wave_String_new(capacity);
+        *s = Wave_String_new(context, capacity);
         return s->capacity != 0;
     }
 
     if (capacity > s->capacity) {
-        char *const reallocated = (char *)realloc(s->data.mut_str, capacity * sizeof(char));
+        char *const reallocated = (char *)w_realloc(context->allocator.alloc, context->allocator.userdata, s->data.mut_str, s->capacity * sizeof(char), capacity * sizeof(char));
         if (reallocated == NULL)
             return false;
         s->data.mut_str = reallocated;
@@ -86,7 +87,7 @@ bool Wave_String_reserve(struct Wave_String *const s, const size_t capacity) {
     return true;
 }
 
-bool Wave_String_push(struct Wave_String *const s, const char ch) {
+bool Wave_String_push(struct Wave_Context *const context, struct Wave_String *const s, const char ch) {
     if (Wave_String_is_view(*s))
         return false;
 
@@ -95,7 +96,7 @@ bool Wave_String_push(struct Wave_String *const s, const char ch) {
 
     if ((s->length + 1) >= s->capacity) {
         const size_t new_cap = s->capacity * 2;
-        if (!Wave_String_reserve(s, new_cap))
+        if (!Wave_String_reserve(context, s, new_cap))
             return false;
     }
 
@@ -107,7 +108,7 @@ bool Wave_String_push(struct Wave_String *const s, const char ch) {
     return true;
 }
 
-bool Wave_String_push_utf8(struct Wave_String *const s, const struct Wave_Unicode_CharUtf8 ch) {
+bool Wave_String_push_utf8(struct Wave_Context *const context, struct Wave_String *const s, const struct Wave_Unicode_CharUtf8 ch) {
     if (Wave_String_is_view(*s))
         return false;
 
@@ -121,7 +122,7 @@ bool Wave_String_push_utf8(struct Wave_String *const s, const struct Wave_Unicod
     
     if ((s->length + ch_len) >= s->capacity) {
         const size_t new_cap = (s->capacity * 2) + ch_len;
-        if (!Wave_String_reserve(s, new_cap))
+        if (!Wave_String_reserve(context, s, new_cap))
             return false;
     }
 
@@ -136,7 +137,7 @@ bool Wave_String_push_utf8(struct Wave_String *const s, const struct Wave_Unicod
     return true;
 }
 
-bool Wave_String_append(struct Wave_String *const s, const char *const str) {
+bool Wave_String_append(struct Wave_Context *const context, struct Wave_String *const s, const char *const str) {
     if (Wave_String_is_view(*s))
         return false;
 
@@ -156,7 +157,7 @@ bool Wave_String_append(struct Wave_String *const s, const char *const str) {
     }
     
     if ((s->length + str_len + 1) > s->capacity)
-        if (!Wave_String_reserve(s, s->length + str_len + 1))
+        if (!Wave_String_reserve(context, s, s->length + str_len + 1))
             return false;
 
     strncpy(s->data.mut_str + s->length, str, str_len);
@@ -167,7 +168,7 @@ bool Wave_String_append(struct Wave_String *const s, const char *const str) {
 }
 
 // mk: string will be corrupt in case of failure and won't be deleted
-bool Wave_String_assign(struct Wave_String* const s, const char* const str) {
+bool Wave_String_assign(struct Wave_Context *const context, struct Wave_String* const s, const char* const str) {
     if (str == NULL)
         return false;
     size_t pivot;
@@ -180,7 +181,7 @@ bool Wave_String_assign(struct Wave_String* const s, const char* const str) {
         }
     }
     
-    return Wave_String_append(s, str + pivot);
+    return Wave_String_append(context, s, str + pivot);
 }
 
 // mk: length in bytes? no in utf-8
@@ -222,12 +223,12 @@ size_t Wave_String_view_expand_utf8(struct Wave_String *const s, const size_t ut
 
 }*/
 
-bool Wave_String_view_to_owned(struct Wave_String *const s) {
+bool Wave_String_view_to_owned(struct Wave_Context *const context, struct Wave_String *const s) {
     if (Wave_String_is_null(*s) || !Wave_String_is_view(*s))
         return false;
 
     const size_t cap = s->length + 1;
-    char *const block = (char *const)malloc(cap * sizeof(char));
+    char *const block = (char *const)w_malloc(context->allocator.alloc, context->allocator.userdata, cap * sizeof(char));
     if (block == NULL)
         return false;
 

@@ -14,7 +14,7 @@ struct Wave_CharLocation Wave_Test_no_loc(void) {
     };
 }
 
-bool Wave_Test_escape_sequences(void) {
+bool Wave_Test_escape_sequences(struct Wave_Context *const context) {
     typedef struct Wave_Lexer_TokenizeEscResult EscResult;
 
     const char *t[] = {"\\axyz", "\\u{AAA}", "\\xAA", "\\\\"};
@@ -23,9 +23,9 @@ bool Wave_Test_escape_sequences(void) {
 
     for (size_t i = 0; i < 4; i++) {
         printf(">> TEST NO %zu:\n", i + 1);
-        EscResult r = Wave_Lexer_tokenize_esc(&loc, t[i], 0, NULL);
+        EscResult r = Wave_Lexer_tokenize_esc(context, &loc, t[i], 0, NULL);
         Wave_Debug_tokenize_esc_result(&r);
-        Wave_Lexer_clean_token_esc(&r);
+        Wave_Lexer_clean_token_esc(context, &r);
     }
 
     return true;
@@ -45,22 +45,22 @@ bool Wave_Test_number_literals(void) {
     return true;
 }
 
-bool Wave_Test_string_literals(void) {
+bool Wave_Test_string_literals(struct Wave_Context *const context) {
     const char *t[] = {"\"hello world\"", "'bob the sponge'", "\"hello\\nworld\\\"\"", "'hello {\\u{AAA}}'"};
 
     struct Wave_CharLocation loc = Wave_Test_no_loc();
 
     for (size_t i = 0; i < 4; i++) {
         printf(">> TEST NO %zu:\n", i + 1);
-        struct Wave_Lexer_TokenizeStringResult r = Wave_Lexer_tokenize_string(&loc, t[i], 0, NULL);
+        struct Wave_Lexer_TokenizeStringResult r = Wave_Lexer_tokenize_string(context, &loc, t[i], 0, NULL);
         Wave_Debug_tokenize_string_result(&r);
-        Wave_Lexer_clean_token_string(&r);
+        Wave_Lexer_clean_token_string(context, &r);
     }
 
     return true;
 }
 
-bool Wave_Test_symbols(void) {
+bool Wave_Test_symbols(struct Wave_Context *const context) {
     const char *t[] = {"let", "const", "match", "matcha"};
 
     struct Wave_CharLocation loc = Wave_Test_no_loc();
@@ -92,7 +92,7 @@ bool Wave_Test_symbols(void) {
             };
         }
         Wave_Debug_dump_token(token);
-        Wave_Token_delete(&token);
+        Wave_Token_delete(context, &token);
     }
 
     return true;

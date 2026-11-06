@@ -11,7 +11,7 @@ bool Wave_Fstr_expr_delimeter_predicate(
     return (params.source[params.n] == ':' || params.source[params.n] == '}') && Wave_Token_do_counters_match(params.token_counters);
 }
 
-struct Wave_TokenFstr_EscOrExprVector Wave_TokenString_EscOrExprVector_new(const size_t capacity) {
+struct Wave_TokenFstr_EscOrExprVector Wave_TokenFstr_EscOrExprVector_new(struct Wave_Context *const context, const size_t capacity) {
     struct Wave_TokenFstr_EscOrExprVector vector = (struct Wave_TokenFstr_EscOrExprVector){
         .elements = NULL,
         .size = 0,
@@ -21,7 +21,7 @@ struct Wave_TokenFstr_EscOrExprVector Wave_TokenString_EscOrExprVector_new(const
     if (capacity == 0)
         return vector;
 
-    vector.elements = (struct Wave_TokenFstr_Element *)malloc(capacity * sizeof(struct Wave_TokenFstr_Element));
+    vector.elements = (struct Wave_TokenFstr_Element *)w_malloc(context->allocator.alloc, context->allocator.userdata, capacity * sizeof(struct Wave_TokenFstr_Element));
     
     if (vector.elements != NULL)
         vector.capacity = capacity;
@@ -29,10 +29,10 @@ struct Wave_TokenFstr_EscOrExprVector Wave_TokenString_EscOrExprVector_new(const
     return vector;
 }
 
-bool Wave_TokenString_EscOrExprVector_push(struct Wave_TokenFstr_EscOrExprVector *const vector, const struct Wave_TokenFstr_Element token) {
+bool Wave_TokenFstr_EscOrExprVector_push(struct Wave_Context *const context, struct Wave_TokenFstr_EscOrExprVector *const vector, const struct Wave_TokenFstr_Element token) {
     if (vector->size >= vector->capacity) {
         const size_t new_cap = vector->capacity * 2;
-        struct Wave_TokenFstr_Element *const reallocated = (struct Wave_TokenFstr_Element *)realloc(vector->elements, new_cap * sizeof(struct Wave_TokenFstr_Element));
+        struct Wave_TokenFstr_Element *const reallocated = (struct Wave_TokenFstr_Element *)w_realloc(context->allocator.alloc, context->allocator.userdata, vector->elements, vector->capacity * sizeof(struct Wave_TokenFstr_Element), new_cap * sizeof(struct Wave_TokenFstr_Element));
         if (reallocated == NULL)
             return false;
         vector->elements = reallocated;
@@ -45,8 +45,8 @@ bool Wave_TokenString_EscOrExprVector_push(struct Wave_TokenFstr_EscOrExprVector
     return true;
 }
 
-void Wave_TokenString_EscOrExprVector_delete(struct Wave_TokenFstr_EscOrExprVector *const vector) {
-    free(vector->elements);
+void Wave_TokenFstr_EscOrExprVector_delete(struct Wave_Context *const context, struct Wave_TokenFstr_EscOrExprVector *const vector) {
+    w_free(context->allocator.alloc, context->allocator.userdata, vector->elements, vector->capacity * sizeof(struct Wave_TokenFstr_Element));
     vector->elements = NULL;
     vector->size = 0;
     vector->capacity = 0;

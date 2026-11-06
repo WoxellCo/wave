@@ -5,16 +5,16 @@
 #include <wave/xml.h>
 #include <stdlib.h>
 
-void Wave_Xml_TagType_delete(struct Wave_Xml_TagType* const tag_type) {
+void Wave_Xml_TagType_delete(struct Wave_Context *const context, struct Wave_Xml_TagType* const tag_type) {
 	if (tag_type == NULL)
 		return;
-	Wave_String_delete(&tag_type->name);
+	Wave_String_delete(context, &tag_type->name);
 }
 
-void Wave_Xml_Tag_delete(struct Wave_Xml_Tag* const tag) {
+void Wave_Xml_Tag_delete(struct Wave_Context *const context, struct Wave_Xml_Tag* const tag) {
 	if (tag == NULL)
 		return;
-	Wave_Xml_TagType_delete(&tag->type);
+	Wave_Xml_TagType_delete(context, &tag->type);
 }
 
 /// xml lexers ///
@@ -36,8 +36,10 @@ static inline bool Wave_Xml_Prop_expr_delimeter_predicate(
     return params.source[params.n] == '}' && Wave_Token_do_counters_match(params.token_counters);
 }
 
+#if 1
 // mk: individual xml prop key/value constructors & destructors will be `static` becase they aren't that needed outside this context
 static bool Wave_Xml_Prop_lex_key(
+	struct Wave_Context *const context,
 	struct Wave_String *wave_restrict const output,
 	struct Wave_CharLocation *wave_restrict const loc,
 	const char *restrict const source,
@@ -52,6 +54,7 @@ static bool Wave_Xml_Prop_lex_key(
 }
 
 static bool Wave_Xml_Text_lex(
+	struct Wave_Context *const context,
 	struct Wave_Xml_Text *wave_restrict const output,
 	struct Wave_CharLocation *wave_restrict const loc,
 	const char *wave_restrict const source,
@@ -77,6 +80,7 @@ static bool Wave_Xml_Text_lex(
 }
 
 static bool Wave_Xml_Prop_lex_value(
+	struct Wave_Context *const context,
 	struct Wave_Xml_PropValue *wave_restrict const output,
 	struct Wave_CharLocation *wave_restrict const loc,
 	const char *wave_restrict const source,
@@ -95,38 +99,41 @@ static bool Wave_Xml_Prop_lex_value(
 			delimiter_predicates
 		);
 		if (dp == NULL || !Wave_Xml_Text_lex(&output->data.text, loc, source, offset + 1, delimiter_predicates)) {
-			Wave_Lexer_dp_delete_vector(&dp);
+			Wave_Lexer_dp_delete_vector(context, &dp);
 			return false;
 		}
-		Wave_Lexer_dp_delete_vector(&dp);
+		Wave_Lexer_dp_delete_vector(context, &dp);
 	} else if (src[0] == '\'') {
 		output->boundaries = src[0];
 		Wave_Lexer_DelimiterPredicate *dp = Wave_Lexer_dp_new_vector_with_concatenation(
+			context,
 			Wave_Lexer_dp_array(Wave_Xml_Prop_double_quoted_text_delimeter_predicate),
 			delimiter_predicates
 		);
 		if (dp == NULL || !Wave_Xml_Text_lex(&output->data.text, loc, source, offset + 1, delimiter_predicates)) {
-			Wave_Lexer_dp_delete_vector(&dp);
+			Wave_Lexer_dp_delete_vector(context, &dp);
 			return false;
 		}
-		Wave_Lexer_dp_delete_vector(&dp);
+		Wave_Lexer_dp_delete_vector(context, &dp);
 	} else if (src[0] == '{') {
 		output->boundaries = '$';
 		Wave_Lexer_DelimiterPredicate *dp = Wave_Lexer_dp_new_vector_with_concatenation(
+			context,
 			Wave_Lexer_dp_array(Wave_Xml_Prop_expr_delimeter_predicate),
 			delimiter_predicates
 		);
 		if (dp == NULL || !Wave_Xml_Text_lex(&output->data.text, loc, source, offset + 1, delimiter_predicates)) {
-			Wave_Lexer_dp_delete_vector(&dp);
+			Wave_Lexer_dp_delete_vector(context, &dp);
 			return false;
 		}
-		Wave_Lexer_dp_delete_vector(&dp);
+		Wave_Lexer_dp_delete_vector(context, &dp);
 	} else {
 		return false;
 	}
 }
 
 bool Wave_Xml_Prop_lex(
+	struct Wave_Context *const context,
 	struct Wave_Xml_Prop *wave_restrict const prop,
 	struct Wave_CharLocation *wave_restrict const loc,
 	const char* wave_restrict const source,
@@ -140,39 +147,40 @@ bool Wave_Xml_Prop_lex(
 
 	return false;
 }
+#endif
 
-static void Wave_Xml_PropValue_delete(struct Wave_Xml_PropValue *prop_value) {
+static void Wave_Xml_PropValue_delete(struct Wave_Context *const context, struct Wave_Xml_PropValue *prop_value) {
 	switch (prop_value->boundaries) {
 		case '$':
-			Wave_Xml_Expr_delete(&prop_value->data.expr);
+			Wave_Xml_Expr_delete(context, &prop_value->data.expr);
 			break;
 		case '"':
 		case '\'':
-			Wave_Xml_Text_delete(&prop_value->data.text);
+			Wave_Xml_Text_delete(context, &prop_value->data.text);
 			break;
 		default:
 			break;
 	}
 }
 
-void Wave_Xml_Prop_delete(struct Wave_Xml_Prop *const prop) {
-	Wave_String_delete(&prop->key);
-	Wave_Xml_PropValue_delete(&prop->value);
+void Wave_Xml_Prop_delete(struct Wave_Context *const context, struct Wave_Xml_Prop *const prop) {
+	Wave_String_delete(context, &prop->key);
+	Wave_Xml_PropValue_delete(context, &prop->value);
 }
 
-void Wave_Xml_delete(struct Wave_Xml* const element) {
+void Wave_Xml_delete(struct Wave_Context *const context, struct Wave_Xml* const element) {
 	if (element == NULL)
 		return;
-	Wave_Xml_TagType_delete(&element->start_tag.type);
+	Wave_Xml_TagType_delete(context, &element->start_tag.type);
 	if (Wave_Xml_is_self_closing(*element)) {
-		Wave_Xml_TagType_delete(&element->end_tag.tag.type);
+		Wave_Xml_TagType_delete(context, &element->end_tag.tag.type);
 	}
-	Wave_XmlVector_delete(&element->children);
+	Wave_XmlVector_delete(context, &element->children);
 }
 
-bool Wave_XmlVector_push(struct Wave_XmlVector* const vector, const struct Wave_XmlNode node) {
+bool Wave_XmlVector_push(struct Wave_Context *const context, struct Wave_XmlVector* const vector, const struct Wave_XmlNode node) {
 	if (vector->nodes == NULL) {
-		struct Wave_XmlNode* const block = (struct Wave_XmlNode*)malloc(4 * sizeof(struct Wave_XmlNode));
+		struct Wave_XmlNode* const block = (struct Wave_XmlNode*)w_malloc(context->allocator.alloc, context->allocator.userdata, 4 * sizeof(struct Wave_XmlNode));
 		if (block == NULL)
 			return false;
 		vector->nodes = block;
@@ -181,7 +189,7 @@ bool Wave_XmlVector_push(struct Wave_XmlVector* const vector, const struct Wave_
 	}
 	else if (vector->size >= vector->capacity) {
 		const size_t cap = 2 * vector->capacity;
-		struct Wave_XmlNode* const block = (struct Wave_XmlNode*)malloc(cap * sizeof(struct Wave_XmlNode));
+		struct Wave_XmlNode* const block = (struct Wave_XmlNode*)w_realloc(context->allocator.alloc, context->allocator.userdata, vector->nodes, vector->capacity * sizeof(struct Wave_XmlNode), cap * sizeof(struct Wave_XmlNode));
 		if (block == NULL)
 			return false;
 		vector->nodes = block;
@@ -190,9 +198,10 @@ bool Wave_XmlVector_push(struct Wave_XmlVector* const vector, const struct Wave_
 
 	vector->nodes[vector->size] = node;
 	vector->size++;
+	return true;
 }
 
-void Wave_XmlVector_delete(struct Wave_XmlVector* const vector) {
+void Wave_XmlVector_delete(struct Wave_Context *const context, struct Wave_XmlVector* const vector) {
 	if (vector == NULL || vector->nodes == NULL || vector->capacity == 0)
 		return;
 
@@ -202,34 +211,34 @@ void Wave_XmlVector_delete(struct Wave_XmlVector* const vector) {
 		case Wave_XmlNodeType_Element:
 			break;
 		case Wave_XmlNodeType_Text:
-			Wave_Xml_Text_delete(&node->data.text);
+			Wave_Xml_Text_delete(context, &node->data.text);
 			break;
 		case Wave_XmlNodeType_Expr:
-			Wave_Xml_Expr_delete(&node->data.expr);
+			Wave_Xml_Expr_delete(context, &node->data.expr);
 			break;
 		default:
 			break;
 		}
 	}
 
-	free(vector->nodes);
+	w_free(context->allocator.alloc, context->allocator.userdata, vector->nodes, vector->capacity * sizeof(struct Wave_XmlNode));
 	vector->capacity = 0;
 	vector->size = 0;
 }
 
 // mk: wave::xml::text.delete()
-void Wave_Xml_Text_delete(struct Wave_Xml_Text* const xml_text) {
+void Wave_Xml_Text_delete(struct Wave_Context *const context, struct Wave_Xml_Text* const xml_text) {
 	if (xml_text == NULL)
 		return;
 
-	Wave_TokenString_EscVector_delete(&xml_text->data.esc_vector);
-	Wave_String_delete(&xml_text->data.string_data);
+	Wave_TokenString_EscVector_delete(context, &xml_text->data.esc_vector);
+	Wave_String_delete(context, &xml_text->data.string_data);
 }
 
 // mk: wave::xml::expr.delete()
-void Wave_Xml_Expr_delete(struct Wave_Xml_Expr* const xml_expr) {
+void Wave_Xml_Expr_delete(struct Wave_Context *const context, struct Wave_Xml_Expr* const xml_expr) {
 	if (xml_expr == NULL)
 		return;
 
-	Wave_TokenVector_delete(&xml_expr->data);
+	Wave_TokenVector_delete(context, &xml_expr->data);
 }

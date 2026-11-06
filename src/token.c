@@ -1,7 +1,7 @@
 #include <wave/token.h>
 #include <stdlib.h>
 
-struct Wave_TokenVector Wave_TokenVector_new(const size_t capacity) {
+struct Wave_TokenVector Wave_TokenVector_new(struct Wave_Context *const context, const size_t capacity) {
     struct Wave_TokenVector vector = (struct Wave_TokenVector){
         .tokens = NULL,
         .size = 0,
@@ -11,7 +11,7 @@ struct Wave_TokenVector Wave_TokenVector_new(const size_t capacity) {
     if (capacity == 0)
         return vector;
 
-    vector.tokens = (struct Wave_Token *)malloc(capacity * sizeof(struct Wave_Token));
+    vector.tokens = (struct Wave_Token *)w_malloc(context->allocator.alloc, context->allocator.userdata, capacity * sizeof(struct Wave_Token));
     
     if (vector.tokens != NULL)
         vector.capacity = capacity;
@@ -19,10 +19,10 @@ struct Wave_TokenVector Wave_TokenVector_new(const size_t capacity) {
     return vector;
 }
 
-bool Wave_TokenVector_push(struct Wave_TokenVector *const vector, const struct Wave_Token token) {
+bool Wave_TokenVector_push(struct Wave_Context *const context, struct Wave_TokenVector *const vector, const struct Wave_Token token) {
     if (vector->size >= vector->capacity) {
         const size_t new_cap = vector->capacity * 2;
-        struct Wave_Token *const reallocated = (struct Wave_Token *)realloc(vector->tokens, new_cap * sizeof(struct Wave_Token));
+        struct Wave_Token *const reallocated = (struct Wave_Token *)w_realloc(context->allocator.alloc, context->allocator.userdata, vector->tokens, vector->capacity * sizeof(struct Wave_Token), new_cap * sizeof(struct Wave_Token));
         if (reallocated == NULL)
             return false;
         vector->tokens = reallocated;
@@ -35,15 +35,15 @@ bool Wave_TokenVector_push(struct Wave_TokenVector *const vector, const struct W
     return true;
 }
 
-void Wave_TokenVector_delete(struct Wave_TokenVector *const vector) {
+void Wave_TokenVector_delete(struct Wave_Context *const context, struct Wave_TokenVector *const vector) {
     if (vector == NULL)
         return;
 
     for (size_t i = 0; i < vector->size; i++) {
-        Wave_Token_delete(&vector->tokens[i]);
+        Wave_Token_delete(context, &vector->tokens[i]);
     }
 
-    free(vector->tokens);
+    w_free(context->allocator.alloc, context->allocator.userdata, vector->tokens, vector->size * sizeof(struct Wave_Token));
     vector->tokens = NULL;
     vector->size = 0;
     vector->capacity = 0;
@@ -57,12 +57,12 @@ bool Wave_Token_do_counters_match(const struct Wave_TokenCounters *const counter
 }
 
 // mk: frees the memory of any token with heap allocation, any token can be passed
-void Wave_Token_delete(struct Wave_Token *const token) {
+void Wave_Token_delete(struct Wave_Context *const context, struct Wave_Token *const token) {
     if (token == NULL)
         return;
 
     if (token->type == Wave_TokenType_LIT_STR) {
-        Wave_String_delete(&token->data.str);
+        Wave_String_delete(context, &token->data.str);
     }
 }
 

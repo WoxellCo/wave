@@ -5,6 +5,7 @@
 #include <wave/char-location.h>
 
 struct Wave_String Wave_Error_compilation_error_to_string(
+    struct Wave_Context *const context,
     const struct Wave_CharLocation *const coords,
     const char *const source,
     const struct Wave_CompilationError *const err
