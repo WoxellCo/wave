@@ -1,3 +1,4 @@
+#include "wave/token-string.h"
 #include <wave/token.h>
 #include <stdlib.h>
 
@@ -62,7 +63,7 @@ void Wave_Token_delete(struct Wave_Context *const context, struct Wave_Token *co
         return;
 
     if (token->type == Wave_TokenType_LIT_STR) {
-        Wave_String_delete(context, &token->data.str);
+        Wave_TokenString_delete(context, &token->data.str);
     }
 }
 

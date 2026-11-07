@@ -1,4 +1,5 @@
 #include "wave/def.h"
+#include "wave/token-string.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -109,7 +110,7 @@ struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
                 .type = Wave_TokenType_LIT_STR,
                 .location = token.location,
                 .length = string_token_result.n,
-                .data.str = string_token_result.string_data
+                .data.str = string_token_result.literal_data
             };
 
 
@@ -140,7 +141,7 @@ struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
                     .type = Wave_TokenType_ID,
                     .location = token.location,
                     .length = symbol_token_result.n,
-                    .data.str = symbol_token_result.data.identifier.id
+                    .data.text = symbol_token_result.data.identifier.id
                 };
             }
 
@@ -173,7 +174,7 @@ struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
         } else if (ch >= '0' && ch <= '9') {
             //printf("pass: `%s`\n\n", src);
             // mk: the number tokenizer should also handle hex (0x), bin (0b), oct (0o), scientific not (1.2e-4) formats
-            const struct Wave_Lexer_TokenizeNumberResult number_token_result = Wave_Lexer_tokenize_number(coords, source, result.n, delimiter_predicates, &token_counters);
+            const struct Wave_Lexer_TokenizeNumberResult number_token_result = Wave_Lexer_tokenize_number(context, coords, source, result.n, delimiter_predicates, &token_counters);
 
             if (number_token_result.error.type > 0) {
                 compilation_error = number_token_result.error;
@@ -367,7 +368,10 @@ struct Wave_Lexer_TokenizeStringResult Wave_Lexer_tokenize_string(
         .error = {
             .type = Wave_CompilationErrorType_None
         },
-        .string_data = Wave_String_null,
+        .literal_data = {
+            .string_data = Wave_String_null,
+            .esc_vector = {0}
+        },
         .n = 0
     };
 
@@ -453,7 +457,8 @@ struct Wave_Lexer_TokenizeStringResult Wave_Lexer_tokenize_string(
                 return result;
             }
             result.n += token_result.n;
-            Wave_Lexer_clean_token_esc(context, &token_result);
+            //Wave_Lexer_clean_token_esc(context, &token_result);
+            Wave_TokenString_EscVector_push(context, &result.literal_data.esc_vector, token_result.data);
             // mk: remove the `"` or `'` already added before which is one utf-8 char and one byte
             //result.n--; // mk: but not here, becase unlike the charlocation, `result.n` is updated after, but it hits `continue` before
             coords->column--;
@@ -503,7 +508,7 @@ struct Wave_Lexer_TokenizeStringResult Wave_Lexer_tokenize_string(
         result.n += ch_result.n;
     }
 
-    result.string_data = s;
+    result.literal_data.string_data = s;
     return result;
 }
 
@@ -1158,6 +1163,7 @@ struct Wave_Lexer_TokenizeOperatorResult Wave_Lexer_tokenize_operator(
 }
 
 struct Wave_Lexer_TokenizeNumberResult Wave_Lexer_tokenize_number(
+    struct Wave_Context *const context,
     struct Wave_CharLocation *const coords,
     const char *const source,
     const size_t offset,
@@ -1392,7 +1398,7 @@ struct Wave_Lexer_TokenizeNumberResult Wave_Lexer_tokenize_number(
     src = number.format == Wave_NumericFormat_Dec ? source + offset : source + offset + 2;
     //printf("(%zu, %u)\n", result.n, number.suffix_length);
     //printf("`%.*s`\n", (int)result.n - number.suffix_length - prefix_length, src);
-    if (!Wave_Numeric_string_to_number(&number, src, result.n - number.suffix_length - prefix_length, &result.error.type)) {
+    if (!Wave_Numeric_string_to_number(context, &number, src, result.n - number.suffix_length - prefix_length, &result.error.type)) {
         return result;
     }
 
@@ -1467,12 +1473,15 @@ void Wave_Lexer_dp_delete_vector(struct Wave_Context *const context, Wave_Lexer_
 }
 
 void Wave_Lexer_clean_token_esc(struct Wave_Context *const context, struct Wave_Lexer_TokenizeEscResult *const token_result) {
-    Wave_String_delete(context, &token_result->data.output);
-    Wave_String_delete(context, &token_result->data.sequence);
+    //Wave_String_delete(context, &token_result->data.output);
+    //Wave_String_delete(context, &token_result->data.sequence);
+    Wave_TokenString_Esc_delete(context, &token_result->data);
 }
 
 void Wave_Lexer_clean_token_string(struct Wave_Context *const context, struct Wave_Lexer_TokenizeStringResult *const token_result) {
-    Wave_String_delete(context, &token_result->string_data);
+    //Wave_String_delete(context, &token_result->literal_data.string_data);
+    //Wave_TokenString_EscVector_delete(context, &token_result->literal_data.esc_vector);
+    Wave_TokenString_delete(context, &token_result->literal_data);
 }
 
 void Wave_Lexer_clean_token_symbol(struct Wave_Context *const context, struct Wave_Lexer_TokenizeSymbolResult *const token_result) {

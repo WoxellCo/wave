@@ -76,7 +76,7 @@ struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
 
 struct Wave_Lexer_TokenizeStringResult {
     struct Wave_CompilationError error;
-    struct Wave_String string_data;
+    struct Wave_TokenString literal_data;
     size_t n;                       // mk: `n` is the number of characters of the source code consumed by the tokenizer
     uint8_t flags;                  // mk: in this case it signals if the cycle was interrputed by the predicate
 };
@@ -140,6 +140,7 @@ struct Wave_Lexer_TokenizeNumberResult {
 };
 
 struct Wave_Lexer_TokenizeNumberResult Wave_Lexer_tokenize_number(
+    struct Wave_Context *const context,
     struct Wave_CharLocation *const coords,
     const char *const source,
     const size_t offset,

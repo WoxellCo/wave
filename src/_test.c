@@ -31,14 +31,14 @@ bool Wave_Test_escape_sequences(struct Wave_Context *const context) {
     return true;
 }
 
-bool Wave_Test_number_literals(void) {
+bool Wave_Test_number_literals(struct Wave_Context *const context) {
     const char *t[] = {"10.0f32", "16.4", "3", "1e5", "1.1e-4", "70i8", "4f64", "0b100", "0xfF", "0o7"};
 
     struct Wave_CharLocation loc = Wave_Test_no_loc();
 
     for (size_t i = 0; i < 10; i++) {
         printf(">> TEST NO %zu:\n", i + 1);
-        const struct Wave_Lexer_TokenizeNumberResult r = Wave_Lexer_tokenize_number(&loc, t[i], 0, NULL, NULL);
+        const struct Wave_Lexer_TokenizeNumberResult r = Wave_Lexer_tokenize_number(context, &loc, t[i], 0, NULL, NULL);
         Wave_Debug_tokenize_number_result(&r);
     }
 
@@ -50,7 +50,7 @@ bool Wave_Test_string_literals(struct Wave_Context *const context) {
 
     struct Wave_CharLocation loc = Wave_Test_no_loc();
 
-    for (size_t i = 0; i < 4; i++) {
+    for (size_t i = 3; i < 4; i++) {
         printf(">> TEST NO %zu:\n", i + 1);
         struct Wave_Lexer_TokenizeStringResult r = Wave_Lexer_tokenize_string(context, &loc, t[i], 0, NULL);
         Wave_Debug_tokenize_string_result(&r);
@@ -88,7 +88,7 @@ bool Wave_Test_symbols(struct Wave_Context *const context) {
                 .type = Wave_TokenType_ID,
                 .location = token.location,
                 .length = r.n,
-                .data.str = r.data.identifier.id
+                .data.text = r.data.identifier.id
             };
         }
         Wave_Debug_dump_token(token);

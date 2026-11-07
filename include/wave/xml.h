@@ -25,7 +25,7 @@ struct Wave_XmlVector {
 };
 
 struct Wave_Xml_PropVector {
-	struct Wave_XmlNode* nodes;
+	struct Wave_Xml_Prop* props;
 	size_t size;
 	size_t capacity;
 };
@@ -100,6 +100,11 @@ struct Wave_Xml_Prop {
 	size_t eq_offset;				// mk: the `=` sign distance from the key example `key="value"` would be `0`, `key ="value"` would be `1`
 	size_t value_offset;			// mk: `key="value"` would be `0`, `key= "value"` would be `1`
 	struct Wave_CharLocation loc;	// mk: location of the first character of the key, the whole length can be retrieved with the previous properties
+};
+
+struct Wave_Xml_LexResult {
+    struct Wave_CompilationError error;
+	size_t n;
 };
 
 void Wave_Xml_TagType_delete(struct Wave_Context *const context, struct Wave_Xml_TagType* const tag_type);

@@ -25,7 +25,7 @@ int main(void) {
         }
     };
     
-    Wave_Test_number_literals();
+    Wave_Test_number_literals(&ctx);
 
     Wave_Test_escape_sequences(&ctx);
 
@@ -47,7 +47,7 @@ int main(void) {
     printf("%u\n", Wave_Unicode_CharUtf8_get_index(ch));
 
     char *buffer = NULL;
-    FILE *f = fopen("../../../examples/test.wave", "r");
+    FILE *f = fopen("../examples/test.wave", "r");
 
     if (f == NULL) {
         fprintf(stderr, "couldn't open test file\n");

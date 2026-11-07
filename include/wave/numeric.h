@@ -38,6 +38,7 @@ struct Wave_Numeric {
 };
 
 bool Wave_Numeric_string_to_number(
+    struct Wave_Context *const context,
     struct Wave_Numeric *const number,
     const char *const s,
     const size_t length,

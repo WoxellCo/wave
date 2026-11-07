@@ -1,6 +1,7 @@
 #ifndef WAVE_TOKEN_STRING_H
 #define WAVE_TOKEN_STRING_H
 
+#include "wave/context.h"
 #include <stdint.h>
 #include <wave/def.h>
 
@@ -26,7 +27,11 @@ struct Wave_TokenString {
 };
 
 struct Wave_TokenString_EscVector Wave_TokenString_EscVector_new(struct Wave_Context *const context, const size_t capacity);
+// mk: does not clone the token, it's moved!
 bool Wave_TokenString_EscVector_push(struct Wave_Context *const context, struct Wave_TokenString_EscVector *const vector, const struct Wave_TokenString_Esc token);
 void Wave_TokenString_EscVector_delete(struct Wave_Context *const context, struct Wave_TokenString_EscVector *const vector);
+
+void Wave_TokenString_delete(struct Wave_Context *const context, struct Wave_TokenString *const token_string);
+void Wave_TokenString_Esc_delete(struct Wave_Context *const context, struct Wave_TokenString_Esc *const token_esc);
 
 #endif

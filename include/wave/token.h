@@ -1,6 +1,7 @@
 #ifndef WAVE_TOKEN_H
 #define WAVE_TOKEN_H
 
+#include <wave/token-string.h>
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -197,7 +198,8 @@ struct Wave_Token {
     size_t length;
     union {
         uint8_t none;
-        struct Wave_String str;
+        struct Wave_TokenString str;
+        struct Wave_String text;
         struct Wave_Numeric num;
     } data;
     enum Wave_TokenCat category;

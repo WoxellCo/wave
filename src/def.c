@@ -39,6 +39,7 @@ break;
 
 #include <stdio.h>
 bool Wave_Numeric_string_to_number(
+    struct Wave_Context *const context,
     struct Wave_Numeric *const number,
     const char *const s,
     const size_t length,
@@ -66,7 +67,7 @@ bool Wave_Numeric_string_to_number(
             return false;
     }
 
-    char *const buffer = (char *)malloc((length + 1) * sizeof(char));
+    char *const buffer = (char *)w_malloc(context->allocator.alloc, context->allocator.userdata, (length + 1) * sizeof(char));
     if (buffer == NULL) {
         *error_out = Wave_CompilationErrorType_InvalidAllocation;
         return false;
@@ -113,7 +114,7 @@ bool Wave_Numeric_string_to_number(
         // mk: actually no.
     //}
 
-    free(buffer);
+    w_free(context->allocator.alloc, context->allocator.userdata, buffer, (length + 1) * sizeof(char));
 
     return true;
 }

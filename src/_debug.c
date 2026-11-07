@@ -28,12 +28,12 @@ void Wave_Debug_dump_token(const struct Wave_Token t) {
 
     if (t.category == Wave_TokenCat_None) {
         if (t.type == Wave_TokenType_LIT_STR) {
-            Wave_Debug_dump_string(t.data.str);
+            Wave_Debug_dump_string(t.data.text);
         } else if (t.type == Wave_TokenType_LIT_NUM) {
             Wave_Debug_dump_numeric(t.data.num);
         } else if (t.type == Wave_TokenType_ID) {
             printf("IDENTIFIER: `");
-            Wave_Debug_print_string(t.data.str);
+            Wave_Debug_print_string(t.data.text);
             puts("`");
         } else if (t.type == Wave_TokenType_SEMICOLON) {
             puts("SEMICOLON `;`");
@@ -200,7 +200,8 @@ void Wave_Debug_tokenize_string_result(const struct Wave_Lexer_TokenizeStringRes
 
     WAVE_DEBUG_TOKENIZE_RESULT_META
 
-    Wave_Debug_dump_string(token_result->string_data);
+    Wave_Debug_dump_string(token_result->literal_data.string_data);
+    // mk: also need to debug srting esc vector
 
     printf(WAVE_DEBUG_END_TEMPLATE, "TOKENIZE STRING RESULT");
 }
