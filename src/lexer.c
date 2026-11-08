@@ -1445,17 +1445,19 @@ Wave_Lexer_DelimiterPredicate *Wave_Lexer_dp_new_vector_with_concatenation(
 ) {
     size_t lengths[2] = {0};
 
-    for (lengths[0] = 0; l1[lengths[0]] != NULL; lengths[0]++);
-    for (lengths[1] = 0; l2[lengths[1]] != NULL; lengths[1]++);
+    if (l1 != NULL)
+        for (lengths[0] = 0; l1[lengths[0]] != NULL; lengths[0]++);
+    if (l2 != NULL)
+        for (lengths[1] = 0; l2[lengths[1]] != NULL; lengths[1]++);
 
     Wave_Lexer_DelimiterPredicate *const vector = (Wave_Lexer_DelimiterPredicate *)w_malloc(context->allocator.alloc, context->allocator.userdata, (lengths[0] + lengths[1] + 1) * sizeof(Wave_Lexer_DelimiterPredicate));
     if (vector == NULL)
         return NULL;
 
-    for (size_t i = 0; i < lengths[0]; i++) {
+    if (l1 != NULL) for (size_t i = 0; i < lengths[0]; i++) {
         vector[i] = l1[i];
     }
-    for (size_t i = 0; i < lengths[1]; i++) {
+    if (l2 != NULL) for (size_t i = 0; i < lengths[1]; i++) {
         vector[lengths[0] + i] = l2[i];
     }
     vector[lengths[0] + lengths[1]] = NULL;
@@ -1467,7 +1469,7 @@ void Wave_Lexer_dp_delete_vector(struct Wave_Context *const context, Wave_Lexer_
     if (vector == NULL || *vector == NULL)
         return;
     size_t size = 1;
-    for (size = 1; vector[size - 1] != NULL; size++);
+    for (size = 1; (*vector)[size - 1] != NULL; size++);
     w_free(context->allocator.alloc, context->allocator.userdata, *vector, size * sizeof(Wave_Lexer_DelimiterPredicate));
     *vector = NULL;
 }

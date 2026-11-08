@@ -105,13 +105,16 @@ struct Wave_Xml_Prop {
 struct Wave_Xml_LexResult {
     struct Wave_CompilationError error;
 	size_t n;
+	uint8_t flags;
 };
+
+#define Wave_Xml_LexResult_null ((struct Wave_Xml_LexResult){ Wave_CompilationError_none, 0, 0 })
 
 void Wave_Xml_TagType_delete(struct Wave_Context *const context, struct Wave_Xml_TagType* const tag_type);
 void Wave_Xml_Tag_delete(struct Wave_Context *const context, struct Wave_Xml_Tag* const tag);
 
 // mk: alright to initialize this you have to pass the address of the uninitialized value
-bool Wave_Xml_Prop_lex(
+struct Wave_Xml_LexResult Wave_Xml_Prop_lex(
 	struct Wave_Context *const context,
 	struct Wave_Xml_Prop *wave_restrict const prop,
 	struct Wave_CharLocation *wave_restrict const loc,

@@ -30,6 +30,7 @@ enum Wave_CompilationErrorType {
     Wave_CompilationErrorType_InvalidUtf8Character,
     Wave_CompilationErrorType_InvalidValue,
     Wave_CompilationErrorType_InvalidSequence,
+    Wave_CompilationErrorType_UnknownError,
 };
 
 enum Wave_CompilationErrorInfoType {
@@ -49,6 +50,7 @@ struct Wave_CompilationError {
 };
 
 #define Wave_CompilationError_none {.type = Wave_CompilationErrorType_None, .info = {0}, .info_type = Wave_CompilationErrorInfoType_None}
+#define Wave_CompilationError_is_error(err) ((err).type != Wave_CompilationErrorType_None)
 
 struct Wave_Identifier {
     struct Wave_String id;

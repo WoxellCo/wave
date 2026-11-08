@@ -1,5 +1,8 @@
+#include "wave/char-location.h"
+#include "wave/context.h"
 #include "wave/lexer.h"
 #include "wave/token.h"
+#include "wave/xml.h"
 #include <stddef.h>
 #include <stdio.h>
 #include <wave/_test.h>
@@ -94,6 +97,43 @@ bool Wave_Test_symbols(struct Wave_Context *const context) {
         Wave_Debug_dump_token(token);
         Wave_Token_delete(context, &token);
     }
+
+    return true;
+}
+
+bool Wave_Test_Xml_prop(struct Wave_Context *const context) {
+    const char *t[] = {
+        "hello=\"'world&quot;\"",
+        "key='\"value&quot;'",
+        "k1 =\"v1\"",
+        "k2= 'v2'",
+        "t1=\"{&#050;}\"",
+        "t2=\"{&#x050;}\"",
+    };
+
+    struct Wave_CharLocation loc = Wave_Test_no_loc();
+
+    for (size_t i = 0; i < 6; i++) {
+        struct Wave_Xml_Prop prop;
+        const struct Wave_Xml_LexResult r = Wave_Xml_Prop_lex(context, &prop, &loc, t[i], 0, NULL);
+        Wave_Debug_compilation_error(r.error);
+        Wave_Debug_print_xml_prop(&prop);
+        putc('\n', stdout);
+        Wave_Xml_Prop_delete(context, &prop);
+    }
+
+    return true;
+}
+
+bool Wave_Test_Xml(struct Wave_Context *const context) {
+    const char *t[] = {
+        "<>\n\
+            <hello prop=\"value\"><div/></hello>\n\
+        </>"
+    };
+
+    (void)context;
+    (void)t;
 
     return true;
 }

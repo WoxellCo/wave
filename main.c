@@ -1,4 +1,5 @@
 #include "waux.h"
+#include "wave/lexer.h"
 #include <wave/_debug.h>
 #include <wave/_test.h>
 #include <locale.h>
@@ -8,6 +9,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <wave.h>
+#include <stdbool.h>
+
+bool delimiter_predicate(const struct Wave_Lexer_DelimiterPredicateParams params) {
+    return params.n >= 41;
+}
+
 
 int main(void) {
     if (!setlocale(LC_ALL, "")) {
@@ -24,14 +31,18 @@ int main(void) {
             .userdata = NULL
         }
     };
+
+    Wave_Test_Xml_prop(&ctx);
     
-    Wave_Test_number_literals(&ctx);
+    //Wave_Test_number_literals(&ctx);
 
-    Wave_Test_escape_sequences(&ctx);
+    //Wave_Test_escape_sequences(&ctx);
 
-    Wave_Test_string_literals(&ctx);
+    //Wave_Test_string_literals(&ctx);
 
-    Wave_Test_symbols(&ctx);
+    //Wave_Test_symbols(&ctx);
+
+    return 0;
 
     struct Wave_Unicode_CharUtf8 ch = Wave_Unicode_CharUtf8_get_at(0x10F223);
     //Wave_Debug_bitset32_dump(ch);
@@ -79,7 +90,7 @@ int main(void) {
 
     printf("STRLEN: %zu\n", strlen(buffer));
 
-    struct Wave_Lexer_TokenizeResult r = Wave_Lexer_tokenize(&ctx, &loc, buffer, 0, NULL);
+    struct Wave_Lexer_TokenizeResult r = Wave_Lexer_tokenize(&ctx, &loc, buffer, 0, Wave_Lexer_dp_array(delimiter_predicate));
     Wave_Debug_dump_token_list(r.token_vector);
 
     free(buffer);

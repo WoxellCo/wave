@@ -2,6 +2,7 @@
 #include "wave/def.h"
 #include "wave/lexer.h"
 #include "wave/token.h"
+#include "wave/xml.h"
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -213,4 +214,22 @@ void Wave_Debug_print_string(const struct Wave_String s) {
 void Wave_Debug_println_string(const struct Wave_String s) {
     Wave_Debug_print_string(s);
     putc('\n', stdout);
+}
+
+void Wave_Debug_print_xml_prop(const struct Wave_Xml_Prop *prop) {
+    Wave_Debug_print_string(prop->key);
+    const char bounds = prop->value.boundaries;
+    if (bounds != '\0') {
+        putc('=', stdout);
+        printf("%c%s%c", bounds, prop->value.data.text.data.string_data.data.str, bounds);
+    }
+}
+
+void Wave_Debug_compilation_error(const struct Wave_CompilationError error) {
+    if (!Wave_CompilationError_is_error(error)) {
+        return;
+    }
+    puts("===[compilation error]===");
+    printf("\ttype: %d\n",  error.type);
+    // printf("\ttype: %d\n",  error.type);
 }

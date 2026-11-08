@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <wave.h>
+#include <wave/xml.h>
 
 void Wave_Debug_dump_char_loc(const struct Wave_CharLocation loc);
 void Wave_Debug_dump_token(const struct Wave_Token t);
@@ -22,5 +23,9 @@ void Wave_Debug_tokenize_esc_result(const struct Wave_Lexer_TokenizeEscResult *c
 void Wave_Debug_tokenize_number_result(const struct Wave_Lexer_TokenizeNumberResult *const token_result);
 
 void Wave_Debug_tokenize_string_result(const struct Wave_Lexer_TokenizeStringResult *const token_result);
+
+void Wave_Debug_print_xml_prop(const struct Wave_Xml_Prop *prop);
+
+void Wave_Debug_compilation_error(const struct Wave_CompilationError error);
 
 #endif
