@@ -1,7 +1,7 @@
 #ifndef WAVE_LEXER_FSTR_H
 #define WAVE_LEXER_FSTR_H
 
-#include <wave/token-fstr.h>
+#include <wave/token_fstr.h>
 #include <wave/lexer.h>
 
 struct Wave_Lexer_TokenizeFstrResult {

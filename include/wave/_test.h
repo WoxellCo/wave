@@ -3,7 +3,7 @@
 
 #include <wave/context.h>
 #include <stdbool.h>
-#include <wave/char-location.h>
+#include <wave/char_location.h>
 
 struct Wave_CharLocation Wave_Test_no_loc(void);
 bool Wave_Test_escape_sequences(struct Wave_Context *const context);

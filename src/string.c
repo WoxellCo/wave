@@ -8,7 +8,7 @@
 #include <string.h>
 #include <wave/unicode.h>
 
-#include <wave/int-target.h>
+#include <wave/int_target.h>
 
 struct Wave_String Wave_String_new(struct Wave_Context *const context, const size_t capacity) {
     struct Wave_String s = (struct Wave_String){

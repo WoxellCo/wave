@@ -2,7 +2,7 @@
 #include "wave/token.h"
 #include <stddef.h>
 #include <wave/def.h>
-#include <wave/token-string.h>
+#include <wave/token_string.h>
 #include <stdlib.h>
 
 struct Wave_TokenString_EscVector Wave_TokenString_EscVector_new(struct Wave_Context *const context, const size_t capacity) {

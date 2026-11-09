@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <wave/def.h>
 #include <wave/token.h>
-#include <wave/token-string.h>
+#include <wave/token_string.h>
 
 #define WAVE_LEXER_TOKENIZE_RESULT_INTERRUPTED_BY_PREDICATE     (1 << 0)
 

@@ -1,13 +1,13 @@
 #ifndef WAVE_TOKEN_H
 #define WAVE_TOKEN_H
 
-#include <wave/token-string.h>
+#include <wave/token_string.h>
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <wave/def.h>
 #include <wave/numeric.h>
-#include <wave/char-location.h>
+#include <wave/char_location.h>
 
 enum Wave_TokenType {
     Wave_TokenType_ID,          // identifier

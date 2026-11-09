@@ -32,7 +32,7 @@ int main(void) {
         }
     };
 
-    Wave_Test_Xml_prop(&ctx);
+    //Wave_Test_Xml_prop(&ctx);
     
     //Wave_Test_number_literals(&ctx);
 
@@ -42,7 +42,7 @@ int main(void) {
 
     //Wave_Test_symbols(&ctx);
 
-    return 0;
+    //return 0;
 
     struct Wave_Unicode_CharUtf8 ch = Wave_Unicode_CharUtf8_get_at(0x10F223);
     //Wave_Debug_bitset32_dump(ch);
@@ -90,7 +90,8 @@ int main(void) {
 
     printf("STRLEN: %zu\n", strlen(buffer));
 
-    struct Wave_Lexer_TokenizeResult r = Wave_Lexer_tokenize(&ctx, &loc, buffer, 0, Wave_Lexer_dp_array(delimiter_predicate));
+    //struct Wave_Lexer_TokenizeResult r = Wave_Lexer_tokenize(&ctx, &loc, buffer, 0, Wave_Lexer_dp_array(delimiter_predicate));
+    struct Wave_Lexer_TokenizeResult r = Wave_Lexer_tokenize(&ctx, &loc, buffer, 0, Wave_Lexer_dp_array(NULL));
     Wave_Debug_dump_token_list(r.token_vector);
 
     free(buffer);

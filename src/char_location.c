@@ -1,7 +1,7 @@
-#include "wave/def.h"
-#include "wave/unicode.h"
+#include <wave/def.h>
+#include <wave/unicode.h>
 #include <stddef.h>
-#include <wave/char-location.h>
+#include <wave/char_location.h>
 
 struct Wave_CharLocation_AdvanceResult Wave_CharLocation_advance(
     struct Wave_CharLocation *const loc,

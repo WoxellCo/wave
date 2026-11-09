@@ -5,7 +5,7 @@
 #include <wave/def.h>
 #include <wave/token.h>
 #include <wave/lexer.h>
-#include <wave/token-string.h> // mk: `string` and `fstr` have a lot of properties in common, so a few things are borrowed from there
+#include <wave/token_string.h> // mk: `string` and `fstr` have a lot of properties in common, so a few things are borrowed from there
 
 // mk: the {...} inside $"...", braces `{}` are included in `start_index` and `length`, but in the elements index the braces are *excluded*!
 struct Wave_TokenFstr_Expr {

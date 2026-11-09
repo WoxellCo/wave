@@ -1,8 +1,8 @@
-#include "wave/char-location.h"
+#include <wave/char_location.h>
 #include <string.h>
-#include <wave/lexer-fstr.h>
+#include <wave/lexer_fstr.h>
 
-#include <wave/int-target.h>
+#include <wave/int_target.h>
 
 struct Wave_Lexer_TokenizeFstrResult Wave_Lexer_tokenize_fstr(
     struct Wave_Context *const context,

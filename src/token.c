@@ -1,4 +1,4 @@
-#include "wave/token-string.h"
+#include <wave/token_string.h>
 #include <wave/token.h>
 #include <stdlib.h>
 

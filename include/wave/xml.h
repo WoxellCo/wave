@@ -7,8 +7,8 @@
 #include <stdbool.h>
 #include <wave/token.h>
 #include <wave/string.h>
-#include <wave/token-string.h>
-#include <wave/char-location.h>
+#include <wave/token_string.h>
+#include <wave/char_location.h>
 #include <wave/target/restrict.h>
 
 #define Wave_Xml_SELF_CLOSING		(1u << 0)

@@ -1,8 +1,8 @@
-#include "wave/char-location.h"
-#include "wave/context.h"
-#include "wave/lexer.h"
-#include "wave/token.h"
-#include "wave/xml.h"
+#include <wave/char_location.h>
+#include <wave/context.h>
+#include <wave/lexer.h>
+#include <wave/token.h>
+#include <wave/xml.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <wave/_test.h>

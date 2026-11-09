@@ -1,5 +1,5 @@
-#include "wave/def.h"
-#include "wave/token-string.h"
+#include <wave/def.h>
+#include <wave/token_string.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <wave/_debug.h>
-#include <wave/lexer-fstr.h>
+#include <wave/lexer_fstr.h>
 
 #define TOKEN_SP(t) (t).category == Wave_TokenCat_Operator ||\
                     (t).category == Wave_TokenCat_Keyword  ||\

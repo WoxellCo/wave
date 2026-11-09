@@ -8,7 +8,7 @@
 #include <wave/numeric.h>
 #include <wave/unicode.h>
 
-#include <wave/int-target.h>
+#include <wave/int_target.h>
 
 // mk: tried to not use the string conversion from the libc, but i'm too lazy to implement one myself
 /*bool Wave_string_to_u8(uint8_t *const value, const char *const s, const size_t length) {

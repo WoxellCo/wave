@@ -1,6 +1,6 @@
-#include "wave/lexer.h"
-#include "wave/token.h"
-#include <wave/token-fstr.h>
+#include <wave/lexer.h>
+#include <wave/token.h>
+#include <wave/token_fstr.h>
 #include <stdlib.h>
 
 //bool Wave_Fstr_expr_delimeter_predicate(const Wave_Lexer_DelimiterPredicate user_delimiter_predicate);

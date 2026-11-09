@@ -1,4 +1,4 @@
-#include "wave/char-location.h"
+#include "wave/char_location.h"
 #include "wave/def.h"
 #include "wave/lexer.h"
 #include "wave/token.h"
@@ -55,7 +55,7 @@ void Wave_Debug_dump_token(const struct Wave_Token t) {
     } else if (t.category == Wave_TokenCat_Keyword) {
         printf("KEYWORD: `%s`\n", Wave_Token_keyword_to_string(t.type));
     } else {
-        printf("<? ? ?>\n");
+        printf("<%u>\n", t.type);
     }
     puts(".");
 }
