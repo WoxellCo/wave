@@ -1,9 +1,11 @@
+#include "wave/_debug.h"
 #include "wave/char-location.h"
 #include "wave/context.h"
 #include "wave/def.h"
 #include "wave/lexer.h"
 #include "wave/string.h"
 #include "wave/token-string.h"
+#include "wave/token.h"
 #include "wave/unicode.h"
 #include <stdbool.h>
 #include <stddef.h>
@@ -42,6 +44,8 @@ static inline bool Wave_Xml_Prop_single_quoted_text_delimeter_predicate(
 static inline bool Wave_Xml_Prop_expr_delimeter_predicate(
     const struct Wave_Lexer_DelimiterPredicateParams params
 ) {
+	Wave_Debug_dump_dp_params(params);
+	printf("`%s`\n", params.source + params.n);
     return params.source[params.n] == '}' && Wave_Token_do_counters_match(params.token_counters);
 }
 
@@ -103,6 +107,7 @@ static struct Wave_Xml_LexResult Wave_Xml_Text_lex_esc(
 	const Wave_Lexer_DelimiterPredicate *wave_restrict const delimiter_predicates
 	#endif
 ) {
+	*output = (struct Wave_TokenString_Esc){0};
 	struct Wave_Xml_LexResult result = Wave_Xml_LexResult_null;
 
 	if (source[offset] != '&') {
@@ -321,7 +326,7 @@ static struct Wave_Xml_LexResult Wave_Xml_Text_lex(
 				}
 			}
 
-			struct Wave_TokenString_Esc escape;
+			struct Wave_TokenString_Esc escape = {0};
 			struct Wave_Xml_LexResult lex_result = Wave_Xml_Text_lex_esc(context, &escape, loc, source, offset + result.n, delimiter_predicates);
 
 			if (lex_result.error.type != Wave_CompilationErrorType_None) {
@@ -423,10 +428,30 @@ static struct Wave_Xml_LexResult Wave_Xml_Prop_lex_value(
 
 		result.n += lex_result.n;
 	} else {
+		output->data.expr.loc = *loc;
 		struct Wave_Lexer_TokenizeResult expr_token_result = Wave_Lexer_tokenize(context, loc, source, offset + 1, dp);
 		if (expr_token_result.error.type != Wave_CompilationErrorType_None) {
 			result.error = expr_token_result.error;
 			Wave_Lexer_dp_delete_vector(context, &dp);
+			return result;
+		}
+
+		
+		output->data.expr.length.bytes = output->data.expr.loc.index - loc->index;
+		output->data.expr.length.utf8 = output->data.expr.loc.utf8_index - loc->utf8_index;
+		output->data.expr.data = expr_token_result.token_vector;
+
+		const char enclosing_boundary = source[offset + result.n + expr_token_result.n];
+		if (enclosing_boundary == '\0') { // mk: 
+			result.error.type = Wave_CompilationErrorType_UnexpectedEndOfFile;
+			Wave_Lexer_dp_delete_vector(context, &dp);
+			Wave_TokenVector_delete(context, &expr_token_result.token_vector);
+			return result;
+		}
+		if (enclosing_boundary != '}') {
+			result.error.type = Wave_CompilationErrorType_UnexpectedBoundary;
+			Wave_Lexer_dp_delete_vector(context, &dp);
+			Wave_TokenVector_delete(context, &expr_token_result.token_vector);
 			return result;
 		}
 
@@ -659,5 +684,6 @@ void Wave_Xml_Expr_delete(struct Wave_Context *const context, struct Wave_Xml_Ex
 	if (xml_expr == NULL)
 		return;
 
+	//(void)context;
 	Wave_TokenVector_delete(context, &xml_expr->data);
 }

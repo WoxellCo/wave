@@ -51,6 +51,8 @@ void Wave_TokenVector_delete(struct Wave_Context *const context, struct Wave_Tok
 }
 
 bool Wave_Token_do_counters_match(const struct Wave_TokenCounters *const counters) {
+    if (counters == NULL)
+        return true;
     return
         counters->lparen == counters->rparen &&
         counters->lbrace == counters->rbrace &&

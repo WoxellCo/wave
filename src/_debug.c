@@ -216,12 +216,16 @@ void Wave_Debug_println_string(const struct Wave_String s) {
     putc('\n', stdout);
 }
 
-void Wave_Debug_print_xml_prop(const struct Wave_Xml_Prop *prop) {
+void Wave_Debug_print_xml_prop(const struct Wave_Xml_Prop *const prop) {
     Wave_Debug_print_string(prop->key);
     const char bounds = prop->value.boundaries;
     if (bounds != '\0') {
         putc('=', stdout);
-        printf("%c%s%c", bounds, prop->value.data.text.data.string_data.data.str, bounds);
+        if (bounds == '"' || bounds == '\'')
+            printf("%c%s%c", bounds, prop->value.data.text.data.string_data.data.str, bounds);
+        else if (bounds == '$') {
+            Wave_Debug_dump_token_list(prop->value.data.expr.data);
+        }
     }
 }
 
@@ -232,4 +236,23 @@ void Wave_Debug_compilation_error(const struct Wave_CompilationError error) {
     puts("===[compilation error]===");
     printf("\ttype: %d\n",  error.type);
     // printf("\ttype: %d\n",  error.type);
+}
+
+void Wave_Debug_dump_token_counters(const struct Wave_TokenCounters *const counters) {
+    if (counters == NULL) {
+        puts("TokenCounters: NULL");
+        return;
+    }
+    printf("TokenCounters {\n");
+    printf("\tPAREN: %zu - %zu\n", counters->lparen, counters->rparen);
+    printf("\tBRACK: %zu - %zu\n", counters->lbrack, counters->rbrack);
+    printf("\tBRACE: %zu - %zu\n", counters->lbrace, counters->rbrace);
+    printf("}\n");
+}
+
+void Wave_Debug_dump_dp_params(const struct Wave_Lexer_DelimiterPredicateParams params) {
+    puts("==[DP PARAMS]==");
+    Wave_Debug_dump_char_loc(*params.loc);
+    printf("n: %zu\n", params.n);
+    Wave_Debug_dump_token_counters(params.token_counters);
 }

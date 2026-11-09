@@ -24,8 +24,10 @@ void Wave_Debug_tokenize_number_result(const struct Wave_Lexer_TokenizeNumberRes
 
 void Wave_Debug_tokenize_string_result(const struct Wave_Lexer_TokenizeStringResult *const token_result);
 
-void Wave_Debug_print_xml_prop(const struct Wave_Xml_Prop *prop);
+void Wave_Debug_print_xml_prop(const struct Wave_Xml_Prop *const prop);
 
 void Wave_Debug_compilation_error(const struct Wave_CompilationError error);
+void Wave_Debug_dump_token_counters(const struct Wave_TokenCounters *const counters);
+void Wave_Debug_dump_dp_params(const struct Wave_Lexer_DelimiterPredicateParams params);
 
 #endif

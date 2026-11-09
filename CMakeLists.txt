@@ -17,7 +17,7 @@ if(SANITIZE AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
         -fno-sanitize-recover=all
         -fno-omit-frame-pointer
     )
-    add_compile_options(${SAN_FLAGS} -g -O1)
+    add_compile_options(${SAN_FLAGS} -g -O0)
     add_link_options(${SAN_FLAGS})
 endif()
 

@@ -118,3 +118,9 @@ bool Wave_Numeric_string_to_number(
 
     return true;
 }
+
+// mk: temporary function used to help with development
+enum Wave_CompilationErrorType Wave_debugger_log(const char *const file, const size_t line) {
+    printf("%s:%zu: wave dbg triggered here!\n", file, line);
+    return Wave_CompilationErrorType_UnexpectedCharacter;//Wave_CompilationErrorType_UnexpectedCharacter_aa;
+}

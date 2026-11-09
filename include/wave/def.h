@@ -56,4 +56,11 @@ struct Wave_Identifier {
     struct Wave_String id;
 };
 
+
+
+// mk: temporary defs for debug
+enum Wave_CompilationErrorType Wave_debugger_log(const char *const file, const size_t line);
+
+//#define Wave_CompilationErrorType_UnexpectedCharacter Wave_debugger_log(__FILE__, __LINE__)
+
 #endif

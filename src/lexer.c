@@ -98,7 +98,7 @@ struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
             result.n++;
             continue;
         } else if (ch == '"' || ch == '\'') {
-            const struct Wave_Lexer_TokenizeStringResult string_token_result = Wave_Lexer_tokenize_string(context, coords, source, result.n, delimiter_predicates);
+            const struct Wave_Lexer_TokenizeStringResult string_token_result = Wave_Lexer_tokenize_string(context, coords, source, offset + result.n, delimiter_predicates);
 
             if (string_token_result.error.type > 0) {
                 // mk: handle error
@@ -121,7 +121,7 @@ struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
             //coords->utf8_column--;
         } else if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == '_') {
             // mk: this can be either a keyword or an identifier
-            const struct Wave_Lexer_TokenizeSymbolResult symbol_token_result = Wave_Lexer_tokenize_symbol(coords, source, result.n, delimiter_predicates);
+            const struct Wave_Lexer_TokenizeSymbolResult symbol_token_result = Wave_Lexer_tokenize_symbol(coords, source, offset + result.n, delimiter_predicates);
 
             if (symbol_token_result.error.type > 0) {
                 compilation_error = symbol_token_result.error;
@@ -174,7 +174,7 @@ struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
         } else if (ch >= '0' && ch <= '9') {
             //printf("pass: `%s`\n\n", src);
             // mk: the number tokenizer should also handle hex (0x), bin (0b), oct (0o), scientific not (1.2e-4) formats
-            const struct Wave_Lexer_TokenizeNumberResult number_token_result = Wave_Lexer_tokenize_number(context, coords, source, result.n, delimiter_predicates, &token_counters);
+            const struct Wave_Lexer_TokenizeNumberResult number_token_result = Wave_Lexer_tokenize_number(context, coords, source, offset + result.n, delimiter_predicates, &token_counters);
 
             if (number_token_result.error.type > 0) {
                 compilation_error = number_token_result.error;
@@ -203,7 +203,7 @@ struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
                     ch == '%'
         ) {
             // mk: operators (most of them)
-            const struct Wave_Lexer_TokenizeOperatorResult operator_token_result = Wave_Lexer_tokenize_operator(coords, source, result.n, delimiter_predicates);            
+            const struct Wave_Lexer_TokenizeOperatorResult operator_token_result = Wave_Lexer_tokenize_operator(coords, source, offset + result.n, delimiter_predicates);            
 
             if (operator_token_result.error.type > 0) {
                 compilation_error = operator_token_result.error;
@@ -227,9 +227,11 @@ struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
             // mk: comment, division or regex literal
             if (TOKEN_SP(tokens->tokens[tokens->size - 1])) { // mk: regex
                 // ...
+                printf("error: regex literals are not supported yet");
+                exit(1);
             }
             else {
-                const struct Wave_Lexer_TokenizeOperatorResult operator_token_result = Wave_Lexer_tokenize_operator(coords, source, result.n, delimiter_predicates);
+                const struct Wave_Lexer_TokenizeOperatorResult operator_token_result = Wave_Lexer_tokenize_operator(coords, source, offset + result.n, delimiter_predicates);
 
                 if (operator_token_result.error.type > 0) {
                     compilation_error = operator_token_result.error;
@@ -254,9 +256,11 @@ struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
             // mk: less than, generics? or xml
             if (TOKEN_SP(tokens->tokens[tokens->size - 1])) { // mk: xml
                 // ...
+                printf("error: xml literals are not supported yet");
+                exit(1);
             }
             else {
-                const struct Wave_Lexer_TokenizeOperatorResult operator_token_result = Wave_Lexer_tokenize_operator(coords, source, result.n, delimiter_predicates);
+                const struct Wave_Lexer_TokenizeOperatorResult operator_token_result = Wave_Lexer_tokenize_operator(coords, source, offset + result.n, delimiter_predicates);
 
                 if (operator_token_result.error.type > 0) {
                     compilation_error = operator_token_result.error;
@@ -315,7 +319,7 @@ struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
         } else if (ch == '$') {
             // mk: fstr `$"..."` or `$'...'`
             if (src[1] == '"' || src[1] == '\'') {
-                const struct Wave_Lexer_TokenizeFstrResult fstring_token_result = Wave_Lexer_tokenize_fstr(context, coords, source, coords->index, delimiter_predicates, &token_counters);
+                const struct Wave_Lexer_TokenizeFstrResult fstring_token_result = Wave_Lexer_tokenize_fstr(context, coords, source, offset + result.n, delimiter_predicates, &token_counters);
 
                 if (fstring_token_result.error.type > 0) {
 

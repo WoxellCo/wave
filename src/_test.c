@@ -109,11 +109,15 @@ bool Wave_Test_Xml_prop(struct Wave_Context *const context) {
         "k2= 'v2'",
         "t1=\"{&#050;}\"",
         "t2=\"{&#x050;}\"",
+        "t3=\"&amp;o&#x050;&copy;&#x051;&#x052;\"",
+        "x1={2 + 2}",
+        "x2={{\"x\"}}",
     };
 
     struct Wave_CharLocation loc = Wave_Test_no_loc();
 
-    for (size_t i = 0; i < 6; i++) {
+    for (size_t i = 0; i < 9; i++) {
+        loc = Wave_Test_no_loc();
         struct Wave_Xml_Prop prop;
         const struct Wave_Xml_LexResult r = Wave_Xml_Prop_lex(context, &prop, &loc, t[i], 0, NULL);
         Wave_Debug_compilation_error(r.error);
