@@ -169,7 +169,7 @@ bool Wave_String_append(struct Wave_Context *const context, struct Wave_String *
 
 // mk: string will be corrupt in case of failure and won't be deleted
 bool Wave_String_assign(struct Wave_Context *const context, struct Wave_String* const s, const char* const str) {
-    if (str == NULL)
+    if (str == NULL || Wave_String_is_view(*s) || Wave_String_is_null(*s))
         return false;
     size_t pivot;
     s->utf8_length = 0;
@@ -181,6 +181,8 @@ bool Wave_String_assign(struct Wave_Context *const context, struct Wave_String* 
         }
     }
     
+    s->length = pivot;
+    s->data.mut_str[pivot] = '\0';
     return Wave_String_append(context, s, str + pivot);
 }
 

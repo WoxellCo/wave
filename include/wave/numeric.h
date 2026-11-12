@@ -42,7 +42,7 @@ bool Wave_Numeric_string_to_number(
     struct Wave_Numeric *const number,
     const char *const s,
     const size_t length,
-    enum Wave_CompilationErrorType *const error_out
+    enum Wave_LogSignalType *const error_out
 );
 
 #endif

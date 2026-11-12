@@ -7,21 +7,21 @@ struct Wave_String Wave_Error_compilation_error_to_string(
     struct Wave_Context *const context,
     const struct Wave_CharLocation *const coords,
     const char *const source,
-    const struct Wave_CompilationError *const err
+    const struct Wave_LogSignal *const err
 ) {
     char buffer[128];
     struct Wave_String message = Wave_String_null;//Wave_String_new(64);
 
     switch (err->type) {
-        case Wave_CompilationErrorType_InvalidAllocation:
+        case Wave_LogSignalType_InvalidAllocation:
             // mk: temporary `sprintf`
             snprintf(buffer, 128, "wave system error: invalid allocation");
             break;
-        case Wave_CompilationErrorType_UnexpectedNullPointer:
+        case Wave_LogSignalType_UnexpectedNullPointer:
             // mk: temporary `sprintf`
             snprintf(buffer, 128, "internal wave compiler error: unexpected null pointer");
             break;
-        case Wave_CompilationErrorType_UnexpectedEndOfFile:
+        case Wave_LogSignalType_UnexpectedEndOfFile:
             snprintf(buffer, 128, "%s:%zu:%zu: error: unexpected EOF, `%s` expected",
                 coords->path,
                 coords->row + 1,
@@ -29,7 +29,7 @@ struct Wave_String Wave_Error_compilation_error_to_string(
                 err->info.expected_sequence
             );
             break;
-        case Wave_CompilationErrorType_UnexpectedBoundary:
+        case Wave_LogSignalType_UnexpectedBoundary:
             snprintf(buffer, 128, "%s:%zu:%zu: error: unexpected boundary `%.*s`, `%s` expected",
                 coords->path,
                 coords->row + 1,
@@ -39,7 +39,7 @@ struct Wave_String Wave_Error_compilation_error_to_string(
                 err->info.expected_sequence
             );
             break;
-        case Wave_CompilationErrorType_UnexpectedCharacter:
+        case Wave_LogSignalType_UnexpectedCharacter:
             snprintf(buffer, 128, "%s:%zu:%zu: error: unexpected character",
                 coords->path,
                 coords->row + 1,
@@ -49,7 +49,7 @@ struct Wave_String Wave_Error_compilation_error_to_string(
                 //err->info.expected_sequence
             );
             break;
-        case Wave_CompilationErrorType_None:
+        case Wave_LogSignalType_None:
             return Wave_String_null;
         default:
             break;

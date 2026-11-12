@@ -30,7 +30,7 @@ struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
 ) {
     struct Wave_Lexer_TokenizeResult result = {
         .error = {
-            .type = Wave_CompilationErrorType_None
+            .type = Wave_LogSignalType_None
         },
         .token_vector = Wave_TokenVector_new(context, 128),
         .n = 0,
@@ -40,19 +40,19 @@ struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
     struct Wave_TokenVector *const tokens = &result.token_vector;
 
     if (!tokens->capacity) {
-        result.error.type = Wave_CompilationErrorType_InvalidAllocation;
+        result.error.type = Wave_LogSignalType_InvalidAllocation;
         return result;
     }
 
     if (source == NULL || coords == NULL) {
-        result.error.type = Wave_CompilationErrorType_UnexpectedNullPointer;
+        result.error.type = Wave_LogSignalType_UnexpectedNullPointer;
         Wave_TokenVector_delete(context, tokens);
         return result;
     }
 
     struct Wave_TokenCounters token_counters = {0};
-    struct Wave_CompilationError compilation_error = {
-        .type = Wave_CompilationErrorType_None,
+    struct Wave_LogSignal compilation_error = {
+        .type = Wave_LogSignalType_None,
         .info = {0}
     };
 
@@ -75,7 +75,7 @@ struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
         }
 
         if (ch_len != 1) { // mk: non-ascii utf-8 characters don't make any sense in the actual code
-            compilation_error.type = Wave_CompilationErrorType_UnexpectedCharacter;
+            compilation_error.type = Wave_LogSignalType_UnexpectedCharacter;
             break;
         }
 
@@ -325,12 +325,12 @@ struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
 
                 }
             } else {
-                compilation_error.type = Wave_CompilationErrorType_UnexpectedCharacter;
+                compilation_error.type = Wave_LogSignalType_UnexpectedCharacter;
                 break;
             }
         } else {
             // mk: unknown expression/character
-            compilation_error.type = Wave_CompilationErrorType_UnexpectedCharacter;
+            compilation_error.type = Wave_LogSignalType_UnexpectedCharacter;
             break;
         }
 
@@ -346,7 +346,7 @@ struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
 
     result.error = compilation_error;
 
-    if (compilation_error.type != Wave_CompilationErrorType_None) {
+    if (compilation_error.type != Wave_LogSignalType_None) {
         struct Wave_String str = Wave_Error_compilation_error_to_string(context, coords, source, &compilation_error);
         puts(str.data.str);
         exit(1);
@@ -370,7 +370,7 @@ struct Wave_Lexer_TokenizeStringResult Wave_Lexer_tokenize_string(
 
     struct Wave_Lexer_TokenizeStringResult result = {
         .error = {
-            .type = Wave_CompilationErrorType_None
+            .type = Wave_LogSignalType_None
         },
         .literal_data = {
             .string_data = Wave_String_null,
@@ -381,14 +381,14 @@ struct Wave_Lexer_TokenizeStringResult Wave_Lexer_tokenize_string(
 
     if (source == NULL) {
         // mk: handle null exception
-        result.error.type = Wave_CompilationErrorType_UnexpectedNullPointer;
+        result.error.type = Wave_LogSignalType_UnexpectedNullPointer;
         return result;
     }
 
     const char *src = source + offset;
     //const char bounds = *src;
     const struct Wave_CharLocation_AdvanceResult bounds_result = Wave_CharLocation_advance(coords, src);
-    if (bounds_result.error.type != Wave_CompilationErrorType_None) {
+    if (bounds_result.error.type != Wave_LogSignalType_None) {
         result.error = bounds_result.error;
         return result;
     }
@@ -396,7 +396,7 @@ struct Wave_Lexer_TokenizeStringResult Wave_Lexer_tokenize_string(
 
     if (bounds.bytes[0] != '"' && bounds.bytes[0] != '\'') {
         // mk: handle invalid string bound exception
-        result.error.type = Wave_CompilationErrorType_InvalidStringBoundary;
+        result.error.type = Wave_LogSignalType_InvalidStringBoundary;
         return result;
     }
 
@@ -414,7 +414,7 @@ struct Wave_Lexer_TokenizeStringResult Wave_Lexer_tokenize_string(
         //coords->column++;
         //coords->index++;
         const struct Wave_CharLocation_AdvanceResult ch_result = Wave_CharLocation_advance(coords, src);
-        if (ch_result.error.type != Wave_CompilationErrorType_None) {
+        if (ch_result.error.type != Wave_LogSignalType_None) {
             result.error = ch_result.error;
             return result;
         }
@@ -422,41 +422,41 @@ struct Wave_Lexer_TokenizeStringResult Wave_Lexer_tokenize_string(
         const uint8_t ch_first = ch.bytes[0];
 
         Wave_Lexer_dp_check_derived(coords, NULL, source, coords->index) {
-            result.error.type = Wave_CompilationErrorType_UnexpectedBoundary;
+            result.error.type = Wave_LogSignalType_UnexpectedBoundary;
             Wave_String_delete(context, &s);
             result.flags |= WAVE_LEXER_TOKENIZE_RESULT_INTERRUPTED_BY_PREDICATE;
             return result;
         }
 
         if (ch_first == '\0') {
-            result.error.type = Wave_CompilationErrorType_UnexpectedEndOfFile;
+            result.error.type = Wave_LogSignalType_UnexpectedEndOfFile;
             result.error.info.expected_sequence[0] = (char)bounds.bytes[0];
             result.error.info.expected_sequence[1] = '\0';
-            result.error.info_type = Wave_CompilationErrorInfoType_ExpectedSequence;
+            result.error.info_type = Wave_LogSignalInfoType_ExpectedSequence;
             Wave_String_delete(context, &s);
             return result;
         }
 
         if (ch_first == '\\') {
             struct Wave_Lexer_TokenizeEscResult token_result = Wave_Lexer_tokenize_esc(context, coords, source, offset + result.n, delimiter_predicates);
-            if (token_result.error.type != Wave_CompilationErrorType_None) {
+            if (token_result.error.type != Wave_LogSignalType_None) {
                 result.error = token_result.error;
                 Wave_String_delete(context, &s);
                 return result;
             }
             if (token_result.flags & WAVE_LEXER_TOKENIZE_RESULT_INTERRUPTED_BY_PREDICATE) {
                 result.flags |= WAVE_LEXER_TOKENIZE_RESULT_INTERRUPTED_BY_PREDICATE;
-                result.error.type = Wave_CompilationErrorType_UnexpectedBoundary;
+                result.error.type = Wave_LogSignalType_UnexpectedBoundary;
                 Wave_String_delete(context, &s);
                 return result;
             }
             if (Wave_String_is_view(s) && !Wave_String_view_to_owned(context, &s)) {
-                result.error.type = Wave_CompilationErrorType_InvalidAllocation;
+                result.error.type = Wave_LogSignalType_InvalidAllocation;
                 Wave_String_delete(context, &s);
                 return result;
             }
             if (!Wave_String_append(context, &s, token_result.data.output.data.str)) {
-                result.error.type = Wave_CompilationErrorType_InvalidAllocation;
+                result.error.type = Wave_LogSignalType_InvalidAllocation;
                 Wave_String_delete(context, &s);
                 return result;
             }
@@ -501,7 +501,7 @@ struct Wave_Lexer_TokenizeStringResult Wave_Lexer_tokenize_string(
         if (Wave_String_is_view(s)) {
             Wave_String_view_expand_utf8(&s, 1);
         } else if (!Wave_String_push_utf8(context, &s, ch)) {
-            result.error.type = Wave_CompilationErrorType_InvalidAllocation;
+            result.error.type = Wave_LogSignalType_InvalidAllocation;
             Wave_String_delete(context, &s);
             return result;
         }
@@ -528,7 +528,7 @@ struct Wave_Lexer_TokenizeEscResult Wave_Lexer_tokenize_esc(
     #endif
 ) {
     struct Wave_Lexer_TokenizeEscResult result = {
-        .error = Wave_CompilationError_none,
+        .error = Wave_LogSignal_none,
         .data = {Wave_String_null, Wave_String_null, 0},
         .n = 0
     };
@@ -542,8 +542,8 @@ struct Wave_Lexer_TokenizeEscResult Wave_Lexer_tokenize_esc(
     //coords->column++;
 
     if (*src != '\\') {
-        result.error.type = Wave_CompilationErrorType_UnexpectedCharacter;
-        result.error.info_type = Wave_CompilationErrorInfoType_ExpectedSequence;
+        result.error.type = Wave_LogSignalType_UnexpectedCharacter;
+        result.error.info_type = Wave_LogSignalInfoType_ExpectedSequence;
         result.error.info.expected_sequence[0] = '\\';
         result.error.info.expected_sequence[1] = '\0';
         return result;
@@ -553,20 +553,20 @@ struct Wave_Lexer_TokenizeEscResult Wave_Lexer_tokenize_esc(
 
     /*result.data.sequence = Wave_String_new(4);
     if (Wave_String_is_null(result.data.sequence)) {
-        result.error.type = Wave_CompilationErrorType_InvalidAllocation;
+        result.error.type = Wave_LogSignalType_InvalidAllocation;
         return result;
     }*/
     result.data.sequence = Wave_String_view_new(src, 1);
   
     result.data.output = Wave_String_new(context, 4);
     if (Wave_String_is_null(result.data.output)) {
-        result.error.type = Wave_CompilationErrorType_InvalidAllocation;
+        result.error.type = Wave_LogSignalType_InvalidAllocation;
         //Wave_String_delete(&result.data.sequence);
         return result;
     }
 
     /*if (!Wave_String_push(&result.data.sequence, *src)) {
-        result.error.type = Wave_CompilationErrorType_InvalidAllocation;
+        result.error.type = Wave_LogSignalType_InvalidAllocation;
         Wave_String_delete(&result.data.sequence);
         Wave_String_delete(&result.data.output);
         return result;
@@ -577,7 +577,7 @@ struct Wave_Lexer_TokenizeEscResult Wave_Lexer_tokenize_esc(
 
     Wave_String_view_expand_utf8(&result.data.sequence, 1);
     /*if (!Wave_String_push(&result.data.sequence, *src)) {
-        result.error.type = Wave_CompilationErrorType_InvalidAllocation;
+        result.error.type = Wave_LogSignalType_InvalidAllocation;
         Wave_String_delete(&result.data.sequence);
         Wave_String_delete(&result.data.output);
         return result;
@@ -601,7 +601,7 @@ struct Wave_Lexer_TokenizeEscResult Wave_Lexer_tokenize_esc(
 
     if (ch != '\0') {
         if (!Wave_String_push(context, &result.data.output, ch)) {
-            result.error.type = Wave_CompilationErrorType_InvalidAllocation;
+            result.error.type = Wave_LogSignalType_InvalidAllocation;
             Wave_String_delete(context, &result.data.sequence);
             Wave_String_delete(context, &result.data.output);
             return result;
@@ -617,7 +617,7 @@ struct Wave_Lexer_TokenizeEscResult Wave_Lexer_tokenize_esc(
                 // mk: unfinished escape sequence
                 Wave_String_delete(context, &result.data.sequence);
                 Wave_String_delete(context, &result.data.output);
-                result.error.type = Wave_CompilationErrorType_UnexpectedBoundary;
+                result.error.type = Wave_LogSignalType_UnexpectedBoundary;
                 result.flags |= WAVE_LEXER_TOKENIZE_RESULT_INTERRUPTED_BY_PREDICATE;
                 return result;
             }
@@ -629,14 +629,14 @@ struct Wave_Lexer_TokenizeEscResult Wave_Lexer_tokenize_esc(
                 /*if (!Wave_String_push(&result.data.sequence, *src)) {
                     Wave_String_delete(&result.data.sequence);
                     Wave_String_delete(&result.data.output);
-                    result.error.type = Wave_CompilationErrorType_InvalidAllocation;
+                    result.error.type = Wave_LogSignalType_InvalidAllocation;
                     return result;
                 }*/
                 Wave_String_view_expand_utf8(&result.data.sequence, 1);
             } else {
                 Wave_String_delete(context, &result.data.sequence);
                 Wave_String_delete(context, &result.data.output);
-                result.error.type = Wave_CompilationErrorType_UnexpectedCharacter;
+                result.error.type = Wave_LogSignalType_UnexpectedCharacter;
                 return result;
             }
         }
@@ -647,7 +647,7 @@ struct Wave_Lexer_TokenizeEscResult Wave_Lexer_tokenize_esc(
         if (!Wave_String_push_utf8(context, &result.data.output, ch_out)) {
             Wave_String_delete(context, &result.data.sequence);
             Wave_String_delete(context, &result.data.output);
-            result.error.type = Wave_CompilationErrorType_InvalidAllocation;
+            result.error.type = Wave_LogSignalType_InvalidAllocation;
             return result;
         }
     } else if (*src == 'u') {
@@ -661,7 +661,7 @@ struct Wave_Lexer_TokenizeEscResult Wave_Lexer_tokenize_esc(
             /*if (!Wave_String_push(&result.data.sequence, '{')) {
                 Wave_String_delete(&result.data.sequence);
                 Wave_String_delete(&result.data.output);
-                result.error.type = Wave_CompilationErrorType_InvalidAllocation;
+                result.error.type = Wave_LogSignalType_InvalidAllocation;
                 return result;
             }*/
             Wave_String_view_expand_utf8(&result.data.sequence, 1);
@@ -673,14 +673,14 @@ struct Wave_Lexer_TokenizeEscResult Wave_Lexer_tokenize_esc(
                     // mk: unfinished escape sequence
                     Wave_String_delete(context, &result.data.sequence);
                     Wave_String_delete(context, &result.data.output);
-                    result.error.type = Wave_CompilationErrorType_UnexpectedBoundary;
+                    result.error.type = Wave_LogSignalType_UnexpectedBoundary;
                     result.flags |= WAVE_LEXER_TOKENIZE_RESULT_INTERRUPTED_BY_PREDICATE;
                     return result;
                 }
                 /*if (!Wave_String_push(&result.data.sequence, *src)) {
                     Wave_String_delete(&result.data.sequence);
                     Wave_String_delete(&result.data.output);
-                    result.error.type = Wave_CompilationErrorType_InvalidAllocation;
+                    result.error.type = Wave_LogSignalType_InvalidAllocation;
                     return result;
                 }*/
                 Wave_String_view_expand_utf8(&result.data.sequence, 1);
@@ -696,7 +696,7 @@ struct Wave_Lexer_TokenizeEscResult Wave_Lexer_tokenize_esc(
                     // mk: error: `\u{FF$}
                     Wave_String_delete(context, &result.data.sequence);
                     Wave_String_delete(context, &result.data.output);
-                    result.error.type = Wave_CompilationErrorType_UnexpectedCharacter;
+                    result.error.type = Wave_LogSignalType_UnexpectedCharacter;
                     return result;
                 }
             }
@@ -710,7 +710,7 @@ struct Wave_Lexer_TokenizeEscResult Wave_Lexer_tokenize_esc(
                     // mk: unfinished escape sequence
                     Wave_String_delete(context, &result.data.sequence);
                     Wave_String_delete(context, &result.data.output);
-                    result.error.type = Wave_CompilationErrorType_UnexpectedBoundary;
+                    result.error.type = Wave_LogSignalType_UnexpectedBoundary;
                     result.flags |= WAVE_LEXER_TOKENIZE_RESULT_INTERRUPTED_BY_PREDICATE;
                     return result;
                 }
@@ -723,14 +723,14 @@ struct Wave_Lexer_TokenizeEscResult Wave_Lexer_tokenize_esc(
                     if (!Wave_String_push(context, &result.data.output, *src)) {
                         Wave_String_delete(context, &result.data.sequence);
                         Wave_String_delete(context, &result.data.output);
-                        result.error.type = Wave_CompilationErrorType_InvalidAllocation;
+                        result.error.type = Wave_LogSignalType_InvalidAllocation;
                         return result;
                     }
                 } else {
                     // mk: just no.
                     Wave_String_delete(context, &result.data.sequence);
                     Wave_String_delete(context, &result.data.output);
-                    result.error.type = Wave_CompilationErrorType_UnexpectedCharacter;
+                    result.error.type = Wave_LogSignalType_UnexpectedCharacter;
                     return result;
                 }
             }
@@ -739,7 +739,7 @@ struct Wave_Lexer_TokenizeEscResult Wave_Lexer_tokenize_esc(
         if (value_len < 1 || value_len > 6) {
             Wave_String_delete(context, &result.data.sequence);
             Wave_String_delete(context, &result.data.output);
-            result.error.type = Wave_CompilationErrorType_InvalidValue;
+            result.error.type = Wave_LogSignalType_InvalidValue;
             return result;
         }
         char *endptr = NULL;
@@ -748,24 +748,24 @@ struct Wave_Lexer_TokenizeEscResult Wave_Lexer_tokenize_esc(
         if (!Wave_String_push_utf8(context, &result.data.output, ch_out)) {
             Wave_String_delete(context, &result.data.sequence);
             Wave_String_delete(context, &result.data.output);
-            result.error.type = Wave_CompilationErrorType_InvalidAllocation;
+            result.error.type = Wave_LogSignalType_InvalidAllocation;
             return result;
         }
     } else if (*src == '\0') {
         Wave_String_delete(context, &result.data.sequence);
         Wave_String_delete(context, &result.data.output);
-        result.error.type = Wave_CompilationErrorType_UnexpectedEndOfFile;
+        result.error.type = Wave_LogSignalType_UnexpectedEndOfFile;
         return result;
     } else {
         // mk: unknown sequence, just do nothing, i'll leave it there as placeholder in case i wanna do something in particular in the future
         /*if (!Wave_String_push(&result.data.output, *src)) {
-            result.error.type = Wave_CompilationErrorType_InvalidAllocation;
+            result.error.type = Wave_LogSignalType_InvalidAllocation;
             Wave_String_delete(&result.data.sequence);
             Wave_String_delete(&result.data.output);
             return result;
         }*/
         // mk: nvm just error
-        result.error.type = Wave_CompilationErrorType_InvalidSequence;
+        result.error.type = Wave_LogSignalType_InvalidSequence;
     }
 
     return result;
@@ -785,14 +785,14 @@ struct Wave_Lexer_TokenizeSymbolResult Wave_Lexer_tokenize_symbol(
 ) {
     struct Wave_Lexer_TokenizeSymbolResult result = {
         .error = {
-            .type = Wave_CompilationErrorType_None
+            .type = Wave_LogSignalType_None
         },
         .data.identifier.id = Wave_String_null,
         .n = 0
     };
 
     if (source == NULL) {
-        result.error.type = Wave_CompilationErrorType_UnexpectedNullPointer;
+        result.error.type = Wave_LogSignalType_UnexpectedNullPointer;
         return result;
     }
 
@@ -801,7 +801,7 @@ struct Wave_Lexer_TokenizeSymbolResult Wave_Lexer_tokenize_symbol(
 
     if (!(ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == '_') {
         // mk: handle invalid identifier start
-        result.error.type = Wave_CompilationErrorType_InvalidSymbol;
+        result.error.type = Wave_LogSignalType_InvalidSymbol;
         return result;
     }
 
@@ -955,7 +955,7 @@ struct Wave_Lexer_TokenizeSymbolResult Wave_Lexer_tokenize_symbol(
     Wave_Debug_dump_string(result.data.identifier.id);
 
     /*if (Wave_String_is_null(result.data.identifier.id)) {
-        result.error.type = Wave_CompilationErrorType_InvalidAllocation;
+        result.error.type = Wave_LogSignalType_InvalidAllocation;
     }*/
 
     return result;
@@ -972,14 +972,14 @@ struct Wave_Lexer_TokenizeOperatorResult Wave_Lexer_tokenize_operator(
     #endif
 ) {
     struct Wave_Lexer_TokenizeOperatorResult result = {
-        .error = Wave_CompilationError_none,
+        .error = Wave_LogSignal_none,
         .operator = 0,
         .n = 1,
         .flags = 0,
     };
 
     if (source == NULL) {
-        result.error.type = Wave_CompilationErrorType_UnexpectedNullPointer;
+        result.error.type = Wave_LogSignalType_UnexpectedNullPointer;
         return result;
     }
 
@@ -1156,7 +1156,7 @@ struct Wave_Lexer_TokenizeOperatorResult Wave_Lexer_tokenize_operator(
             break;
 
         default:
-            result.error.type = Wave_CompilationErrorType_UnexpectedCharacter;
+            result.error.type = Wave_LogSignalType_UnexpectedCharacter;
             result.n = 0;
             break;
     }
@@ -1179,14 +1179,14 @@ struct Wave_Lexer_TokenizeNumberResult Wave_Lexer_tokenize_number(
     const struct Wave_TokenCounters *const token_counters
 ) {
     struct Wave_Lexer_TokenizeNumberResult result = {
-        .error = Wave_CompilationError_none,
+        .error = Wave_LogSignal_none,
         .number = {0},
         .n = 0,
         .flags = 0,
     };
 
     if (source == NULL) {
-        result.error.type = Wave_CompilationErrorType_UnexpectedNullPointer;
+        result.error.type = Wave_LogSignalType_UnexpectedNullPointer;
         return result;
     }
 
@@ -1197,7 +1197,7 @@ struct Wave_Lexer_TokenizeNumberResult Wave_Lexer_tokenize_number(
 
     // mk: this condition only applies to the very first character of the number literal
     if (!((ch >= '0' && ch < '9') || (ch == '.' && src[1] != '.'))) {
-        result.error.type = Wave_CompilationErrorType_UnexpectedCharacter;
+        result.error.type = Wave_LogSignalType_UnexpectedCharacter;
         return result;
     }
 
@@ -1216,12 +1216,12 @@ struct Wave_Lexer_TokenizeNumberResult Wave_Lexer_tokenize_number(
         src = source + offset + result.n;
         //ch = *src;
         const struct Wave_CharLocation_AdvanceResult ch_result = Wave_CharLocation_advance(coords, src);
-        if (ch_result.error.type != Wave_CompilationErrorType_None) {
+        if (ch_result.error.type != Wave_LogSignalType_None) {
             result.error = ch_result.error;
             return result;
         }
         if (ch_result.n != 1) {
-            result.error.type = Wave_CompilationErrorType_UnexpectedCharacter;
+            result.error.type = Wave_LogSignalType_UnexpectedCharacter;
             return result;
         }
         ch = (char)ch_result.ch.bytes[0];
@@ -1265,13 +1265,13 @@ struct Wave_Lexer_TokenizeNumberResult Wave_Lexer_tokenize_number(
             // mk: keeping separate because it should handle binary format notation
         } else if (ch >= '2' && ch <= '7') {
             if (number.format == Wave_NumericFormat_Bin) {
-                result.error.type = Wave_CompilationErrorType_UnexpectedCharacter;
+                result.error.type = Wave_LogSignalType_UnexpectedCharacter;
                 return result;
             }
         } else if (ch == '8' || ch == '9') {
             if (number.format == Wave_NumericFormat_Bin ||
                 number.format == Wave_NumericFormat_Oct) {
-                result.error.type = Wave_CompilationErrorType_UnexpectedCharacter;
+                result.error.type = Wave_LogSignalType_UnexpectedCharacter;
                 return result;
             }
         } else if ((ch == 'e' || ch == 'E') && (number.format == Wave_NumericFormat_Dec)) { // mk: dw about `e` being in the first position (which wouldn't be a valid number), it's already handled by the condition before the loop
@@ -1325,37 +1325,37 @@ struct Wave_Lexer_TokenizeNumberResult Wave_Lexer_tokenize_number(
 
             if (src[1] == '8') { //                                                     8
                 if (src[2] >= '0' && src[2] <= '9') {
-                    result.error.type = Wave_CompilationErrorType_UnexpectedCharacter;
+                    result.error.type = Wave_LogSignalType_UnexpectedCharacter;
                     return result;
                 }
                 number.bits = 8;
                 number.suffix_length = 2;
             } else if (src[1] == '1' && src[2] == '6') { //                             16
                 if (src[3] >= '0' && src[3] <= '9') {
-                    result.error.type = Wave_CompilationErrorType_UnexpectedCharacter;
+                    result.error.type = Wave_LogSignalType_UnexpectedCharacter;
                     return result;
                 }
                 number.bits = 16;
             } else if (src[1] == '3' && src[2] == '2') { //                             32
                 if (src[3] >= '0' && src[3] <= '9') {
-                    result.error.type = Wave_CompilationErrorType_UnexpectedCharacter;
+                    result.error.type = Wave_LogSignalType_UnexpectedCharacter;
                     return result;
                 }
                 number.bits = 32;
             } else if (src[1] == '6' && src[2] == '4') { //                             64
                 if (src[3] >= '0' && src[3] <= '9') {
-                    result.error.type = Wave_CompilationErrorType_UnexpectedCharacter;
+                    result.error.type = Wave_LogSignalType_UnexpectedCharacter;
                     return result;
                 }
                 number.bits = 64;
             } else { //                                                                 ?
-                result.error.type = Wave_CompilationErrorType_UnexpectedCharacter;
+                result.error.type = Wave_LogSignalType_UnexpectedCharacter;
                 return result;
             }
 
             if (number.flags & Wave_Numeric_FLOAT) {
                 // mk: if it's a float it can't be an int literal
-                result.error.type = Wave_CompilationErrorType_InvalidFloatToIntLiteral;
+                result.error.type = Wave_LogSignalType_InvalidFloatToIntLiteral;
                 return result;
             }
 
@@ -1369,18 +1369,18 @@ struct Wave_Lexer_TokenizeNumberResult Wave_Lexer_tokenize_number(
 
             if (src[1] == '3' && src[2] == '2') { //                                    32
                 if (src[3] >= '0' && src[3] <= '9') {
-                    result.error.type = Wave_CompilationErrorType_UnexpectedCharacter;
+                    result.error.type = Wave_LogSignalType_UnexpectedCharacter;
                     return result;
                 }
                 number.bits = 32;
             } else if (src[1] == '6' && src[2] == '4') { //                             64
                 if (src[3] >= '0' && src[3] <= '9') {
-                    result.error.type = Wave_CompilationErrorType_UnexpectedCharacter;
+                    result.error.type = Wave_LogSignalType_UnexpectedCharacter;
                     return result;
                 }
                 number.bits = 64;
             } else { //                                                                 ?
-                result.error.type = Wave_CompilationErrorType_UnexpectedCharacter;
+                result.error.type = Wave_LogSignalType_UnexpectedCharacter;
                 return result;
             }
             number.suffix_length = 3;

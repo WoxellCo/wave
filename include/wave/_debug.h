@@ -26,7 +26,7 @@ void Wave_Debug_tokenize_string_result(const struct Wave_Lexer_TokenizeStringRes
 
 void Wave_Debug_print_xml_prop(const struct Wave_Xml_Prop *const prop);
 
-void Wave_Debug_compilation_error(const struct Wave_CompilationError error);
+void Wave_Debug_compilation_error(const struct Wave_LogSignal error);
 void Wave_Debug_dump_token_counters(const struct Wave_TokenCounters *const counters);
 void Wave_Debug_dump_dp_params(const struct Wave_Lexer_DelimiterPredicateParams params);
 

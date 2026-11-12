@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <wave/string.h>
+#include <wave/log.h>
 
 #define w_malloc(f, ud, size) ((f)((ud), NULL, 0, (size)))
 #define w_realloc(f, ud, ptr, osz, size) ((f)((ud), (ptr), (osz), (size)))
@@ -15,43 +16,6 @@
 };*/
 
 
-// mk: type of errors during compilation
-enum Wave_CompilationErrorType {
-    Wave_CompilationErrorType_None = 0,
-    Wave_CompilationErrorType_InvalidAllocation,
-    Wave_CompilationErrorType_UnexpectedNullPointer,
-    Wave_CompilationErrorType_UnexpectedEndOfFile,
-    Wave_CompilationErrorType_UnexpectedBoundary,
-    Wave_CompilationErrorType_InvalidStringBoundary,
-    Wave_CompilationErrorType_InvalidSymbol,
-    Wave_CompilationErrorType_UnexpectedCharacter,
-    Wave_CompilationErrorType_NumberOutOfRange,
-    Wave_CompilationErrorType_InvalidFloatToIntLiteral,
-    Wave_CompilationErrorType_InvalidUtf8Character,
-    Wave_CompilationErrorType_InvalidValue,
-    Wave_CompilationErrorType_InvalidSequence,
-    Wave_CompilationErrorType_UnknownError,
-};
-
-enum Wave_CompilationErrorInfoType {
-    Wave_CompilationErrorInfoType_None,
-    Wave_CompilationErrorInfoType_ExpectedSequence
-};
-
-// mk: errors such as allocation error etc, that occur during compilation
-struct Wave_CompilationError {
-    enum Wave_CompilationErrorType type;
-    // mk: i put in a struct because there might be additional useful diagnostics info in the future
-    enum Wave_CompilationErrorInfoType info_type;
-    union {
-        uint8_t none;
-        char expected_sequence[16];
-    } info;
-};
-
-#define Wave_CompilationError_none {.type = Wave_CompilationErrorType_None, .info = {0}, .info_type = Wave_CompilationErrorInfoType_None}
-#define Wave_CompilationError_is_error(err) ((err).type != Wave_CompilationErrorType_None)
-
 struct Wave_Identifier {
     struct Wave_String id;
 };
@@ -59,7 +23,7 @@ struct Wave_Identifier {
 
 
 // mk: temporary defs for debug
-enum Wave_CompilationErrorType Wave_debugger_log(const char *const file, const size_t line);
+enum Wave_LogSignalType Wave_debugger_log(const char *const file, const size_t line);
 
 //#define Wave_CompilationErrorType_UnexpectedCharacter Wave_debugger_log(__FILE__, __LINE__)
 

@@ -162,6 +162,8 @@ enum Wave_TokenType {
     Wave_TokenType_DELETE,      // `delete`
     Wave_TokenType_AS,          // `as`
     Wave_TokenType_PIPE,        // `|>`
+    Wave_TokenType_EOF,         // <eof>
+    Wave_TokenType_EOX,         // <eox>
 };
 
 enum Wave_TokenCat {

@@ -229,8 +229,8 @@ void Wave_Debug_print_xml_prop(const struct Wave_Xml_Prop *const prop) {
     }
 }
 
-void Wave_Debug_compilation_error(const struct Wave_CompilationError error) {
-    if (!Wave_CompilationError_is_error(error)) {
+void Wave_Debug_compilation_error(const struct Wave_LogSignal error) {
+    if (!Wave_LogSignal_is_error(error)) {
         return;
     }
     puts("===[compilation error]===");

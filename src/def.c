@@ -24,13 +24,13 @@
 case bits:\
 if (number->flags & Wave_Numeric_UNSIGNED) {\
     if (temp.u > UINT##bits##_MAX) {\
-        *error_out = Wave_CompilationErrorType_NumberOutOfRange;\
+        *error_out = Wave_LogSignalType_NumberOutOfRange;\
         return false;\
     }\
     number->data.u##bits = (uint##bits##_t)temp.u;\
 } else {\
     if (temp.i < INT##bits##_MIN || temp.i > INT##bits##_MAX) {\
-        *error_out = Wave_CompilationErrorType_NumberOutOfRange;\
+        *error_out = Wave_LogSignalType_NumberOutOfRange;\
         return false;\
     }\
     number->data.i##bits = (int##bits##_t)temp.i;\
@@ -43,9 +43,9 @@ bool Wave_Numeric_string_to_number(
     struct Wave_Numeric *const number,
     const char *const s,
     const size_t length,
-    enum Wave_CompilationErrorType *const error_out
+    enum Wave_LogSignalType *const error_out
 ) {
-    *error_out = Wave_CompilationErrorType_None;
+    *error_out = Wave_LogSignalType_None;
     int base;
 
     //printf("NNNNNNNNNNNNNNN:::: %.*s\n", (int)length, s);
@@ -69,7 +69,7 @@ bool Wave_Numeric_string_to_number(
 
     char *const buffer = (char *)w_malloc(context->allocator.alloc, context->allocator.userdata, (length + 1) * sizeof(char));
     if (buffer == NULL) {
-        *error_out = Wave_CompilationErrorType_InvalidAllocation;
+        *error_out = Wave_LogSignalType_InvalidAllocation;
         return false;
     }
 
@@ -120,7 +120,7 @@ bool Wave_Numeric_string_to_number(
 }
 
 // mk: temporary function used to help with development
-enum Wave_CompilationErrorType Wave_debugger_log(const char *const file, const size_t line) {
+enum Wave_LogSignalType Wave_debugger_log(const char *const file, const size_t line) {
     printf("%s:%zu: wave dbg triggered here!\n", file, line);
-    return Wave_CompilationErrorType_UnexpectedCharacter;//Wave_CompilationErrorType_UnexpectedCharacter_aa;
+    return Wave_LogSignalType_UnexpectedCharacter;//Wave_LogSignalType_UnexpectedCharacter_aa;
 }

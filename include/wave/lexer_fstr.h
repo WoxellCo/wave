@@ -5,7 +5,7 @@
 #include <wave/lexer.h>
 
 struct Wave_Lexer_TokenizeFstrResult {
-    struct Wave_CompilationError error;
+    struct Wave_LogSignal error;
     
     size_t n;
     uint8_t flags;

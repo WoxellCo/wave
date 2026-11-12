@@ -23,7 +23,7 @@ struct Wave_CharLength {
 // mk: in addition i will add a result type
 
 struct Wave_CharLocation_AdvanceResult {
-    struct Wave_CompilationError error;
+    struct Wave_LogSignal error;
     struct Wave_Unicode_CharUtf8 ch;
     size_t n;   // mk: how many bytes this char has
 };

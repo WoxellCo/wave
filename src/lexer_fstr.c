@@ -17,7 +17,7 @@ struct Wave_Lexer_TokenizeFstrResult Wave_Lexer_tokenize_fstr(
     const struct Wave_TokenCounters *const token_counters
 ) {
     struct Wave_Lexer_TokenizeFstrResult result = {
-        .error = Wave_CompilationError_none,
+        .error = Wave_LogSignal_none,
         .n = 0,
         .flags = 0
     };
@@ -28,15 +28,15 @@ struct Wave_Lexer_TokenizeFstrResult Wave_Lexer_tokenize_fstr(
 
     const char *src = source + offset;
     const struct Wave_CharLocation_AdvanceResult first_ch_result = Wave_CharLocation_advance(coords, src);
-    if (first_ch_result.error.type != Wave_CompilationErrorType_None) {
+    if (first_ch_result.error.type != Wave_LogSignalType_None) {
         result.error = first_ch_result.error;
         return result;
     }
     const struct Wave_Unicode_CharUtf8 first_ch = first_ch_result.ch;
 
     if (first_ch.bytes[0] != '$') {
-        result.error.type = Wave_CompilationErrorType_UnexpectedCharacter;
-        result.error.info_type = Wave_CompilationErrorInfoType_ExpectedSequence;
+        result.error.type = Wave_LogSignalType_UnexpectedCharacter;
+        result.error.info_type = Wave_LogSignalInfoType_ExpectedSequence;
         strncpy(result.error.info.expected_sequence, "$", 2);
         return result;
     }
@@ -45,14 +45,14 @@ struct Wave_Lexer_TokenizeFstrResult Wave_Lexer_tokenize_fstr(
 
     src = source + offset + result.n;
     const struct Wave_CharLocation_AdvanceResult bounds_result = Wave_CharLocation_advance(coords, src);
-    if (bounds_result.error.type != Wave_CompilationErrorType_None) {
+    if (bounds_result.error.type != Wave_LogSignalType_None) {
         result.error = bounds_result.error;
         return result;
     }
     const struct Wave_Unicode_CharUtf8 bounds = bounds_result.ch;
 
     if (bounds.bytes[0] != '"' && bounds.bytes[0] != '\'') {
-        result.error.type = Wave_CompilationErrorType_InvalidStringBoundary;
+        result.error.type = Wave_LogSignalType_InvalidStringBoundary;
         return result;
     }
 
@@ -65,7 +65,7 @@ struct Wave_Lexer_TokenizeFstrResult Wave_Lexer_tokenize_fstr(
         src = source + offset + result.n;
         
         const struct Wave_CharLocation_AdvanceResult ch_result = Wave_CharLocation_advance(coords, src);
-        if (ch_result.error.type != Wave_CompilationErrorType_None) {
+        if (ch_result.error.type != Wave_LogSignalType_None) {
             result.error = ch_result.error;
             Wave_String_delete(context, &s);
             Wave_Lexer_dp_delete_vector(context, &extended_predicates);
@@ -75,7 +75,7 @@ struct Wave_Lexer_TokenizeFstrResult Wave_Lexer_tokenize_fstr(
         const uint8_t ch_first = ch.bytes[0];
 
         Wave_Lexer_dp_check_derived(coords, NULL, source, coords->index) {
-            result.error.type = Wave_CompilationErrorType_UnexpectedBoundary;
+            result.error.type = Wave_LogSignalType_UnexpectedBoundary;
             Wave_String_delete(context, &s);
             result.flags |= WAVE_LEXER_TOKENIZE_RESULT_INTERRUPTED_BY_PREDICATE;
             Wave_Lexer_dp_delete_vector(context, &extended_predicates);
@@ -83,10 +83,10 @@ struct Wave_Lexer_TokenizeFstrResult Wave_Lexer_tokenize_fstr(
         }
 
         if (ch_first == '\0') {
-            result.error.type = Wave_CompilationErrorType_UnexpectedEndOfFile;
+            result.error.type = Wave_LogSignalType_UnexpectedEndOfFile;
             result.error.info.expected_sequence[0] = (char)bounds.bytes[0];
             result.error.info.expected_sequence[1] = '\0';
-            result.error.info_type = Wave_CompilationErrorInfoType_ExpectedSequence;
+            result.error.info_type = Wave_LogSignalInfoType_ExpectedSequence;
             Wave_String_delete(context, &s);
             Wave_Lexer_dp_delete_vector(context, &extended_predicates);
             return result;
@@ -94,7 +94,7 @@ struct Wave_Lexer_TokenizeFstrResult Wave_Lexer_tokenize_fstr(
 
         if (ch_first == '\\') {
             struct Wave_Lexer_TokenizeEscResult token_result = Wave_Lexer_tokenize_esc(context, coords, source, offset + result.n, delimiter_predicates);
-            if (token_result.error.type != Wave_CompilationErrorType_None) {
+            if (token_result.error.type != Wave_LogSignalType_None) {
                 result.error = token_result.error;
                 Wave_String_delete(context, &s);
                 Wave_Lexer_dp_delete_vector(context, &extended_predicates);
@@ -102,19 +102,19 @@ struct Wave_Lexer_TokenizeFstrResult Wave_Lexer_tokenize_fstr(
             }
             if (token_result.flags & WAVE_LEXER_TOKENIZE_RESULT_INTERRUPTED_BY_PREDICATE) {
                 result.flags |= WAVE_LEXER_TOKENIZE_RESULT_INTERRUPTED_BY_PREDICATE;
-                result.error.type = Wave_CompilationErrorType_UnexpectedBoundary;
+                result.error.type = Wave_LogSignalType_UnexpectedBoundary;
                 Wave_String_delete(context, &s);
                 Wave_Lexer_dp_delete_vector(context, &extended_predicates);
                 return result;
             }
             if (Wave_String_is_view(s) && !Wave_String_view_to_owned(context, &s)) {
-                result.error.type = Wave_CompilationErrorType_InvalidAllocation;
+                result.error.type = Wave_LogSignalType_InvalidAllocation;
                 Wave_String_delete(context, &s);
                 Wave_Lexer_dp_delete_vector(context, &extended_predicates);
                 return result;
             }
             if (!Wave_String_append(context, &s, token_result.data.output.data.str)) {
-                result.error.type = Wave_CompilationErrorType_InvalidAllocation;
+                result.error.type = Wave_LogSignalType_InvalidAllocation;
                 Wave_String_delete(context, &s);
                 Wave_Lexer_dp_delete_vector(context, &extended_predicates);
                 return result;
@@ -131,7 +131,7 @@ struct Wave_Lexer_TokenizeFstrResult Wave_Lexer_tokenize_fstr(
             break;
         } else if (*src == '{') {
             Wave_Lexer_dp_check_derived(coords, NULL, source, coords->index + 1) {
-                result.error.type = Wave_CompilationErrorType_UnexpectedBoundary;
+                result.error.type = Wave_LogSignalType_UnexpectedBoundary;
                 Wave_String_delete(context, &s);
                 result.flags |= WAVE_LEXER_TOKENIZE_RESULT_INTERRUPTED_BY_PREDICATE;
                 return result;
@@ -146,7 +146,7 @@ struct Wave_Lexer_TokenizeFstrResult Wave_Lexer_tokenize_fstr(
                 if (Wave_String_is_view(s)) {
                     Wave_String_view_expand_utf8(&s, 1);
                 } else if (!Wave_String_push(context, &s, '{')) {
-                    result.error.type = Wave_CompilationErrorType_InvalidAllocation;
+                    result.error.type = Wave_LogSignalType_InvalidAllocation;
                     Wave_String_delete(context, &s);
                     Wave_Lexer_dp_delete_vector(context, &extended_predicates);
                     return result;
@@ -159,7 +159,7 @@ struct Wave_Lexer_TokenizeFstrResult Wave_Lexer_tokenize_fstr(
         if (Wave_String_is_view(s)) {
             Wave_String_view_expand_utf8(&s, 1);
         } else if (!Wave_String_push_utf8(context, &s, ch)) {
-            result.error.type = Wave_CompilationErrorType_InvalidAllocation;
+            result.error.type = Wave_LogSignalType_InvalidAllocation;
             Wave_String_delete(context, &s);
             Wave_Lexer_dp_delete_vector(context, &extended_predicates);
             return result;

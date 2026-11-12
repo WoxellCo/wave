@@ -13,7 +13,7 @@
 #define WAVE_LEXER_TOKENIZE_SYMBOL_RESULT_KEYWORD               (1 << 1)
 
 struct Wave_Lexer_TokenizeResult {
-    struct Wave_CompilationError error;
+    struct Wave_LogSignal error;
     struct Wave_TokenVector token_vector;
     size_t n;                       // mk: `n` is the number of characters of the source code consumed by the tokenizer
     uint8_t flags;                  // mk: in this case it signals if the cycle was interrputed by the predicate
@@ -75,7 +75,7 @@ struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
 );
 
 struct Wave_Lexer_TokenizeStringResult {
-    struct Wave_CompilationError error;
+    struct Wave_LogSignal error;
     struct Wave_TokenString literal_data;
     size_t n;                       // mk: `n` is the number of characters of the source code consumed by the tokenizer
     uint8_t flags;                  // mk: in this case it signals if the cycle was interrputed by the predicate
@@ -94,7 +94,7 @@ struct Wave_Lexer_TokenizeStringResult Wave_Lexer_tokenize_string(
 );
 
 struct Wave_Lexer_TokenizeSymbolResult {
-    struct Wave_CompilationError error;
+    struct Wave_LogSignal error;
     union {
         struct Wave_Identifier identifier;
         enum Wave_TokenType keyword;
@@ -115,7 +115,7 @@ struct Wave_Lexer_TokenizeSymbolResult Wave_Lexer_tokenize_symbol(
 );
 
 struct Wave_Lexer_TokenizeOperatorResult {
-    struct Wave_CompilationError error;
+    struct Wave_LogSignal error;
     enum Wave_TokenType operator;
     size_t n;
     uint8_t flags;
@@ -133,7 +133,7 @@ struct Wave_Lexer_TokenizeOperatorResult Wave_Lexer_tokenize_operator(
 );
 
 struct Wave_Lexer_TokenizeNumberResult {
-    struct Wave_CompilationError error;
+    struct Wave_LogSignal error;
     struct Wave_Numeric number;
     size_t n;
     uint8_t flags;
@@ -153,7 +153,7 @@ struct Wave_Lexer_TokenizeNumberResult Wave_Lexer_tokenize_number(
 );
 
 struct Wave_Lexer_TokenizeEscResult {
-    struct Wave_CompilationError error;
+    struct Wave_LogSignal error;
     struct Wave_TokenString_Esc data;
     size_t n;
     uint8_t flags;

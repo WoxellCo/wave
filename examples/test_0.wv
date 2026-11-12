@@ -1,0 +1,42 @@
+// mk: functions will have defaults disabled
+
+fn add(
+    x: i32,
+    y: i32
+) -> i32 { x + y }
+
+const add = fn (x: i32, y: i32) -> i32 { x + y };
+
+let add: fn (i32, i32);
+
+
+
+// mk: structs will have variadics disabled
+struct x {
+    x: i32,
+    y: i32,
+    __xml = { // mk: default value of xml
+        is_static_id = fn (self, id) -> bool {
+            // mk: check if id is all lowercase
+            true
+        }
+    }
+}
+
+const x = struct { x: i32, y: i32 };
+
+let x: struct { i32, i32 };
+
+
+
+let y: i32;
+
+let z: i32 = 7;
+
+
+
+type number = i64 | i32;
+
+const number: type = i64 | i32;
+
+let number: type = i64 | f32;

@@ -8,14 +8,14 @@ struct Wave_CharLocation_AdvanceResult Wave_CharLocation_advance(
     const char *const source
 ) {
     struct Wave_CharLocation_AdvanceResult result = {
-        .error = Wave_CompilationError_none,
+        .error = Wave_LogSignal_none,
         .ch = {{0}},
         .n = 0
     };
     const struct Wave_Unicode_CharUtf8 ch = Wave_Unicode_CharUtf8_assign((unsigned char *)source);
 
     if (ch.bytes[0] == 0 && *source != '\0') { // mk: defo an error
-        result.error.type = Wave_CompilationErrorType_InvalidUtf8Character;
+        result.error.type = Wave_LogSignalType_InvalidUtf8Character;
         return result;
     }
 

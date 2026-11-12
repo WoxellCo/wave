@@ -63,7 +63,7 @@ void Wave_Ast_delete_nodes(struct Wave_Context *const context, struct Wave_AstNo
         return;
 
     for (size_t i = 0; i < node->count; i++) {
-        Wave_Ast_delete_nodes(context, node);
+        Wave_Ast_delete_nodes(context, &node->branches[i]);
     }
 
     w_free(
