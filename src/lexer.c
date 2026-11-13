@@ -1,3 +1,4 @@
+#include "wave/token.h"
 #include <wave/def.h>
 #include <wave/token_string.h>
 #include <stdbool.h>
@@ -153,6 +154,7 @@ struct Wave_Lexer_TokenizeResult Wave_Lexer_tokenize(
         } else if (ch == '.') {
             // mk: this can be either a member access, spread operator, a range or a floating number
             size_t delta = 0;
+            token.category = Wave_TokenCat_Operator;
             token.type = Wave_TokenType_DOT;
             Wave_Lexer_dp_check_derived(coords, &token_counters, source, offset + result.n + 1) {
                 if (source[offset + result.n + 1] == '.') {

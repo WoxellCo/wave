@@ -12,6 +12,7 @@
 enum Wave_AstNodeMetaType {
     Wave_AstNodeMetaType_None,
     Wave_AstNodeMetaType_Fn,
+    Wave_AstNodeMetaType_Interrupt,
 };
 
 struct Wave_AstNode {

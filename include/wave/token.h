@@ -30,8 +30,8 @@ enum Wave_TokenType {
     Wave_TokenType_FARROW,      // `=>`
     Wave_TokenType_SPACESHIP,   // `<=>`
     Wave_TokenType_AWA,         // `>~<`
-    Wave_TokenType_LIT_INT,     // int literal
-    Wave_TokenType_LIT_FLOAT,   // float literal
+    Wave_TokenType_LIT_INT,     // int literal (unused?)
+    Wave_TokenType_LIT_FLOAT,   // float literal (unused?)
     Wave_TokenType_LIT_NUM,     // number literal
     Wave_TokenType_LIT_STR,     // string literal
     Wave_TokenType_BOOL_TRUE,   // bool literal `true`

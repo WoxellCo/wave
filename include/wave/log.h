@@ -24,6 +24,7 @@ enum Wave_LogSignalType {
     Wave_LogSignalType_InvalidSequence,
     Wave_LogSignalType_UnknownError,
     Wave_LogSignalType_UnexpectedToken,
+    Wave_LogSignalType_UnexpectedEndOfExecution,
 };
 
 enum Wave_LogSignalInfoType {

@@ -58,6 +58,8 @@ struct Wave_String Wave_String_from_and_max_len(struct Wave_Context *const conte
 }
 
 struct Wave_String Wave_String_from(struct Wave_Context *const context, const char *const str) {
+    if (str == NULL)
+        return Wave_String_null;
     const size_t str_len = strlen(str);
     struct Wave_String s = Wave_String_from_and_max_len(context, str, str_len);
     return s;
